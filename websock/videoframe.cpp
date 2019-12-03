@@ -10,6 +10,7 @@ VideoFrame::VideoFrame(QWidget *parent) : QGLWidget(parent)
     m_is_tex_update = false;
     m_is_update = false;
     m_scale = 1;
+	m_rotateBy90 = false;
 
     connect(&m_timer, SIGNAL(timeout()), this, SLOT(onTimeout()));
     m_timer.start(15);
@@ -45,7 +46,12 @@ void VideoFrame::startCVCamera()
 //    m_camCapture->moveToThread(m_camCapture);
 //    m_camCapture->start();
 
-//    connect(m_camCapture, SIGNAL(sendImage(QImage)), this, SLOT(onReceiveImage(QImage)), Qt::QueuedConnection);
+	//    connect(m_camCapture, SIGNAL(sendImage(QImage)), this, SLOT(onReceiveImage(QImage)), Qt::QueuedConnection);
+}
+
+void VideoFrame::setRotateBy90(bool v)
+{
+	m_rotateBy90 = v;
 }
 
 void VideoFrame::onTimeout()
@@ -124,16 +130,28 @@ void VideoFrame::drawImage()
     m_model.setToIdentity();
     m_model.translate(0, 0, -2);
 
+	if(m_rotateBy90)
+		m_model.rotate(-90, 0, 0, 1);
+
     m_model.scale(m_scale, m_scale, 1);
 
     float arim = (float)m_image.width()/m_image.height();
     float ar = (float)width() / height();
 
-    if(ar > arim){
-        m_model.scale(arim, 1, 1);
-    }else{
-        m_model.scale(ar, ar / arim, 1);
-    }
+	if(m_rotateBy90){
+		arim = 1 / arim;
+		if(ar > arim){
+			m_model.scale(1, arim, 1);
+		}else{
+			m_model.scale(ar / arim, ar, 1);
+		}
+	}else{
+		if(ar > arim){
+			m_model.scale(arim, 1, 1);
+		}else{
+			m_model.scale(ar, ar / arim, 1);
+		}
+	}
 
     m_mvp = m_proj * m_model;
 

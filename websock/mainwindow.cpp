@@ -19,3 +19,12 @@ MainWindow::~MainWindow()
 	delete ui;
 }
 
+
+void MainWindow::on_actionRotate_by_90_triggered()
+{
+}
+
+void MainWindow::on_actionRotate_by_90_triggered(bool checked)
+{
+	ui->widgetFrame->setRotateBy90(checked);
+}

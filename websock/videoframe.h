@@ -24,6 +24,8 @@ public:
 
     void startCVCamera();
 
+	void setRotateBy90(bool v);
+
 signals:
 
 public slots:
@@ -35,6 +37,8 @@ private:
     bool m_is_update;
     bool m_is_tex_update;
     QTimer m_timer;
+
+	bool m_rotateBy90;
 
     uint m_bindTex;
     int m_mvpInt;

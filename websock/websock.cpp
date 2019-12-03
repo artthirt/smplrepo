@@ -123,7 +123,7 @@ void WebSock::run()
 	m_sock->bind(8000);
 
 	int buf = 5 * 1024 * 1024;
-	setsockopt(m_sock->socketDescriptor(), SOL_SOCKET, SO_SNDBUF, (char*)&buf, sizeof(buf));
+	setsockopt(m_sock->socketDescriptor(), SOL_SOCKET, SO_RCVBUF, (char*)&buf, sizeof(buf));
 
 	connect(m_sock.get(), SIGNAL(readyRead()), this, SLOT(onReadyRead()));
 

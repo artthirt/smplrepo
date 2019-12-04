@@ -8,7 +8,7 @@
 
 #include <QFile>
 
-#ifdef _MSC_VER_
+#ifdef _MSC_VER
 #include <WinSock2.h>
 #else
 #include <sys/socket.h>

@@ -3,6 +3,8 @@
 #include <QMouseEvent>
 #include <QWheelEvent>
 
+#include <QPainter>
+
 VideoFrame::VideoFrame(QWidget *parent) : QGLWidget(parent)
 //  , m_camCapture(0)
 {
@@ -13,7 +15,11 @@ VideoFrame::VideoFrame(QWidget *parent) : QGLWidget(parent)
 	m_rotateBy90 = false;
 
     connect(&m_timer, SIGNAL(timeout()), this, SLOT(onTimeout()));
-    m_timer.start(15);
+	m_timer.start(1);
+
+	m_counter_fps = 0;
+	m_fps = 0;
+	m_time_fps.start();
 }
 
 VideoFrame::~VideoFrame()
@@ -59,15 +65,22 @@ void VideoFrame::onTimeout()
     if(m_is_update){
         m_is_update = false;
         generateTexture();
-        updateGL();
+		update();
     }
+
+	if(m_time_fps.elapsed() > FPS_TIMEWAIT){
+		m_fps = (float)m_counter_fps/m_time_fps.elapsed() * 1000;
+		m_counter_fps = 0;
+		m_time_fps.restart();
+	}
 }
 
 void VideoFrame::onReceiveImage(const QImage &image)
 {
     m_image = image;
+	m_counter_fps++;
 
-	m_image.save("1.bmp");
+	//m_image.save("1.bmp");
 
     m_is_tex_update = true;
     m_is_update = true;
@@ -75,7 +88,9 @@ void VideoFrame::onReceiveImage(const QImage &image)
 
 void VideoFrame::setViewport(float w, float h)
 {
-    float ar = w / h;
+	glViewport(0, 0, w, h);
+
+	float ar = w / h;
     m_proj.setToIdentity();
     m_proj.ortho(-ar, ar, -1, 1, 1, 10);
 }
@@ -118,10 +133,12 @@ inline void qmat2float(const QMatrix4x4& mat, float* data, int len = 16)
 
 void VideoFrame::drawImage()
 {
-    setViewport(width(), height());
+	setViewport(width(), height());
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glClearColor(0, 0, 0, 1);
+	glClearColor(0, 0, 0, 1);
+	glLoadIdentity();
+	glTranslatef(0, 0, -2);
 
     m_shpr.bind();
 
@@ -180,6 +197,9 @@ void VideoFrame::initializeGL()
 
     QOpenGLFunctions::initializeOpenGLFunctions();
 
+	glEnable(GL_MULTISAMPLE);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     glGenTextures(1, &m_bindTex);
     //m_bindTex = 1;
 
@@ -232,15 +252,12 @@ void VideoFrame::resizeGL(int w, int h)
 {
     QGLWidget::resizeGL(w, h);
 
-    glViewport(0, 0, w, h);
     setViewport(w, h);
 }
 
 void VideoFrame::paintGL()
 {
     QGLWidget::paintGL();
-
-    drawImage();
 }
 
 
@@ -261,5 +278,23 @@ bool VideoFrame::event(QEvent *event)
 
     }
 
-    return QGLWidget::event(event);
+	return QGLWidget::event(event);
+}
+
+void VideoFrame::paintEvent(QPaintEvent *event)
+{
+	makeCurrent();
+	drawImage();
+	doneCurrent();
+
+	QPainter painter(this);
+	painter.setRenderHint(QPainter::Antialiasing);
+
+	painter.setPen(Qt::white);
+
+	painter.drawText(10, 30, "fps " + QString::number(m_fps, 'f', 0));
+
+	painter.end();
+
+//	QGLWidget::paintEvent(event);
 }

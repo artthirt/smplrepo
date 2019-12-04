@@ -28,7 +28,7 @@ set(LIBS Qt5::Core Qt5::Widgets Qt5::Network Qt5::OpenGL
     ${AVCODEC} ${AVFORMAT} ${AVUTIL})
 
 if(WIN32)
-    set(LIBS ${LIBS} WS2_32)
+	set(LIBS ${LIBS} WS2_32 opengl32)
 else()
     set(LIBS ${LIBS} pthread)
 endif()

@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QGLWidget>
 #include <QTimer>
+#include <QTime>
 #include <QImage>
 #include <QMatrix4x4>
 #include <QOpenGLFunctions>
@@ -15,6 +16,8 @@ class VideoFrame : public QGLWidget, private QOpenGLFunctions
 {
     Q_OBJECT
 public:
+	enum{FPS_TIMEWAIT = 2000};
+
     explicit VideoFrame(QWidget *parent = nullptr);
     ~VideoFrame();
 
@@ -37,6 +40,9 @@ private:
     bool m_is_update;
     bool m_is_tex_update;
     QTimer m_timer;
+	QTime m_time_fps;
+	float m_fps;
+	uint m_counter_fps;
 
 	bool m_rotateBy90;
 
@@ -73,6 +79,10 @@ protected:
     // QObject interface
 public:
     bool event(QEvent *event);
+
+	// QWidget interface
+protected:
+	void paintEvent(QPaintEvent *event);
 };
 
 #endif // GLWIDGET_H

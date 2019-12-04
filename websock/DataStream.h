@@ -6,6 +6,7 @@
 #define WEBCAM_DATASTREAM_H
 
 #include <vector>
+#include <inttypes.h>
 
 typedef std::vector<char> bytearray;
 

@@ -8,7 +8,11 @@
 
 #include <QFile>
 
+#ifdef _MSC_VER_
 #include <WinSock2.h>
+#else
+#include <sys/socket.h>
+#endif
 
 #define MAX_FRAMES			8
 

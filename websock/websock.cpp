@@ -16,7 +16,7 @@
 
 #define MAX_FRAMES			8
 
-#define MAX_BUFFERS			30
+#define MAX_BUFFERS			3000
 
 const uchar JPEG_STRING[] = {0xff, 0xd8, 0xff, 0xe0};
 

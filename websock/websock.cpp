@@ -70,7 +70,8 @@ WebSock::WebSock(QObject *parent) : QThread(parent)
 
 	initH264();
 
-	m_decodeThread.reset(new std::thread(std::bind(&WebSock::doDecodeH264, this)));
+    m_decodeThread.reset(new std::thread(std::bind(&WebSock::doSendPktToCodec, this)));
+    //m_decodeThread2.reset(new std::thread(std::bind(&WebSock::doGetDecodedFrame, this)));
 }
 
 WebSock::~WebSock()
@@ -80,11 +81,15 @@ WebSock::~WebSock()
 	quit();
 	wait();
 
-	if(m_decodeThread){
+    if(m_decodeThread.get()){
 		m_decodeThread->join();
 	}
 
-	if(m_ctx){
+    if(m_decodeThread2.get()){
+        m_decodeThread2->join();
+    }
+
+    if(m_ctx){
 #if LIBAVCODEC_VERSION_MAJOR > 56
 		avcodec_free_context(&m_ctx);
 #else
@@ -227,10 +232,21 @@ void WebSock::initH264()
 			printf("Error: could not open codec.\n");
 			return;
 		}
-	}
+    }
 }
 
-void WebSock::doDecodeH264()
+void WebSock::doGetDecodedFrame()
+{
+    while(!m_done){
+        if(m_is_update_frame){
+            decodeH264();
+        }else{
+            std::this_thread::sleep_for(std::chrono::milliseconds(2));
+        }
+    }
+}
+
+void WebSock::doSendPktToCodec()
 {
 	while(!m_done){
 		if(!m_framesH264.empty()){
@@ -239,81 +255,73 @@ void WebSock::doDecodeH264()
 			m_framesH264.pop();
 			//m_mutexh.unlock();
 
-			decodeH264(data);
+            doSendPkt(data);
         }else{
             std::this_thread::sleep_for(std::chrono::milliseconds(2));
         }
-	}
+    }
 }
 
-void WebSock::decodeH264(const QByteArray &frame)
+void WebSock::doSendPkt(const QByteArray& data)
+{
+
+    AVPacket pkt;
+    av_init_packet(&pkt);
+
+    pkt.dts = AV_NOPTS_VALUE;
+    pkt.stream_index = 0;
+    pkt.flags = 0;
+    pkt.side_data = 0;
+    pkt.side_data_elems = 0;
+    pkt.duration = 0;
+    pkt.pos = -1;
+    pkt.convergence_duration = AV_NOPTS_VALUE;
+
+    pkt.pts = m_numpack;
+    pkt.data = (uint8_t*)data.data();
+    pkt.size = data.size();
+
+    int res = avcodec_send_packet(m_ctx, &pkt);
+    m_is_update_frame = true;
+
+    if(res < 0){
+        char buf[256] = {0};
+        av_make_error_string(buf, 256, res);
+        qDebug("error %s \n", buf);
+    }else{
+        decodeH264();
+    }
+}
+
+void WebSock::decodeH264()
 {
 	AVFrame *picture = av_frame_alloc();
 	memset(picture, 0, sizeof(picture));
 
-	parseH264(frame, picture);
+    parseH264(picture);
 
 	av_frame_free(&picture);
 }
 
-void WebSock::parseH264(const QByteArray &data, AVFrame *picture)
+bool WebSock::parseH264(AVFrame *picture)
 {
-	if(data.isEmpty())
-		return;
-
-//	{
-//		uint sm = get_sum(data);
-//		QString s = QString("bins/tmp_%1_%2.264")
-//				.arg(numpack, 6, 10, QLatin1Char('0'))
-//				.arg(sm, 6, 3, QLatin1Char('0'));
-//		QFile file(s);
-//		file.open(QIODevice::WriteOnly);
-//		file.write(data);
-//		file.close();
-//	}
-
-	AVPacket pkt;
-	av_init_packet(&pkt);
-
-	pkt.dts = AV_NOPTS_VALUE;
-	pkt.stream_index = 0;
-	pkt.flags = 0;
-	pkt.side_data = 0;
-	pkt.side_data_elems = 0;
-	pkt.duration = 0;
-	pkt.pos = -1;
-	pkt.convergence_duration = AV_NOPTS_VALUE;
-
-	pkt.pts = m_numpack;
-	pkt.data = (uint8_t*)data.data();
-	pkt.size = data.size();
-
-	int got_picture = 0;
-
-//	qDebug("packet size %d", data.size());
-
-	int res = avcodec_decode_video2(m_ctx, picture, &got_picture, &pkt);
+    int res = avcodec_receive_frame(m_ctx, picture);
 
 	if(res < 0){
-//		QFile f("error.bin");
-//		f.open(QIODevice::WriteOnly | QIODevice::Append);
-//		f.write(data);
-//		f.close();
-
-		char buf[256] = {0};
+        m_is_update_frame = false;
+        char buf[256] = {0};
 		av_make_error_string(buf, 256, res);
 		qDebug("error %s \n", buf);
+        return false;
 	}
 
-	if(!got_picture)
-		return;
-
-	if(res > 0){
-//		qDebug("got picture %d. %d, [%d %d] %d", got_picture, res, m_picture->width,
-//			   m_picture->height, m_picture->pict_type);
-
-		createImage(picture);
+    if(res == 0){
+        m_is_update_frame = false;
+        createImage(picture);
+        return true;
 	}
+    m_is_update_frame = false;
+    return false;
 }
 
 void WebSock::createImage(AVFrame *picture)

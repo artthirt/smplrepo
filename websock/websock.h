@@ -66,6 +66,7 @@ private:
 	std::unique_ptr<QTimer> m_timer;
 
 	std::unique_ptr<std::thread> m_decodeThread;
+    std::unique_ptr<std::thread> m_decodeThread2;
 
 	void tryParseData(const QByteArray &data);
 
@@ -73,11 +74,14 @@ private:
 	AVCodecContext *m_ctx	= nullptr;
 	bool m_done				= false;
 	uint m_numpack			= 0;
+    bool m_is_update_frame  = false;;
 
 	void initH264();
-	void doDecodeH264();
-	void decodeH264(const QByteArray& frame);
-	void parseH264(const QByteArray &data, AVFrame *picture);
+    void doGetDecodedFrame();
+    void doSendPktToCodec();
+    void doSendPkt(const QByteArray &data);
+    void decodeH264();
+    bool parseH264(AVFrame *picture);
 	void createImage(AVFrame *picture);
 };
 

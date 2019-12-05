@@ -240,9 +240,9 @@ void WebSock::doDecodeH264()
 			//m_mutexh.unlock();
 
 			decodeH264(data);
-		}
-
-		std::this_thread::sleep_for(std::chrono::milliseconds(2));
+        }else{
+            std::this_thread::sleep_for(std::chrono::milliseconds(2));
+        }
 	}
 }
 

@@ -16,13 +16,22 @@ find_package(Qt5 COMPONENTS OpenGL REQUIRED)
 
 add_executable(websock main.cpp websock.cpp mainwindow.cpp mainwindow.ui videodata.cpp videoframe.cpp videoframe.ui DataStream.cpp)
 
-include_directories(./
-                        ./include/
-	                ./ffmpeg/include)
+set(INCLUDES ./
+    ./include/)
 
-find_library(AVCODEC avcodec HINTS ffmpeg/bin)
-find_library(AVFORMAT avformat HINTS ffmpeg/bin)
-find_library(AVUTIL avutil HINTS ffmpeg/bin)
+set(DEFAULT_FFMPEGDIR ./)
+
+if(WIN32)
+    set(INCLUDES ${INCLUDES}
+        ./ffmpeg/include)
+    set(DEFAULT_FFMPEGDIR ${DEFAULT_FFMPEGDIR})
+endif()
+
+include_directories(${INCLUDES})
+
+find_library(AVCODEC avcodec HINTS      ${DEFAULT_FFMPEGDIR})
+find_library(AVFORMAT avformat HINTS    ${DEFAULT_FFMPEGDIR})
+find_library(AVUTIL avutil HINTS        ${DEFAULT_FFMPEGDIR})
 
 set(LIBS Qt5::Core Qt5::Widgets Qt5::Network Qt5::OpenGL
     ${AVCODEC} ${AVFORMAT} ${AVUTIL})
@@ -30,7 +39,7 @@ set(LIBS Qt5::Core Qt5::Widgets Qt5::Network Qt5::OpenGL
 if(WIN32)
 	set(LIBS ${LIBS} WS2_32 opengl32)
 else()
-    set(LIBS ${LIBS} pthread)
+    set(LIBS ${LIBS} pthread GL)
 endif()
 
 target_link_libraries(websock ${LIBS})

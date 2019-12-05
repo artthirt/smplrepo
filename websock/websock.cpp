@@ -178,22 +178,22 @@ void WebSock::initH264()
 	}else{
 		m_ctx = avcodec_alloc_context3(m_codec);
 
-		if(m_codec->capabilities & CODEC_CAP_TRUNCATED) {
-			m_ctx->flags |= CODEC_FLAG_TRUNCATED;
+        if(m_codec->capabilities & AV_CODEC_CAP_TRUNCATED) {
+            m_ctx->flags |= AV_CODEC_FLAG_TRUNCATED;
 		}
 //		if(m_codec->capabilities & CODEC_FLAG2_CHUNKS)
-		m_ctx->flags2 |= CODEC_FLAG2_NO_OUTPUT;
+        m_ctx->flags2 |= AV_CODEC_FLAG2_NO_OUTPUT;
 
-		if( (m_codec->capabilities & CODEC_CAP_TRUNCATED) != 0)
-			m_ctx->flags |= CODEC_FLAG_TRUNCATED;
-		m_ctx->flags |= CODEC_FLAG_INPUT_PRESERVED | CODEC_FLAG_LOW_DELAY | CODEC_FLAG_LOOP_FILTER;
+        if( (m_codec->capabilities & AV_CODEC_CAP_TRUNCATED) != 0)
+            m_ctx->flags |= AV_CODEC_FLAG_TRUNCATED;
+        m_ctx->flags |= AV_CODEC_FLAG_LOW_DELAY | AV_CODEC_FLAG_LOOP_FILTER;
 		//m_ctx->flags |= CODEC_FLAG_LOOP_FILTER;
 
 //		m_ctx->flags2 |= CODEC_FLAG2_FAST | CODEC_FLAG2_NO_OUTPUT
 //				| CODEC_FLAG2_DROP_FRAME_TIMECODE | CODEC_FLAG2_IGNORE_CROP
 //				| CODEC_FLAG2_SHOW_ALL;
-		m_ctx->flags2 |= CODEC_FLAG2_NO_OUTPUT | CODEC_FLAG2_FAST;
-		m_ctx->flags2 |= CODEC_FLAG2_DROP_FRAME_TIMECODE | CODEC_FLAG2_IGNORE_CROP | CODEC_FLAG2_SHOW_ALL;
+        m_ctx->flags2 |= AV_CODEC_FLAG2_NO_OUTPUT | AV_CODEC_FLAG2_FAST;
+        m_ctx->flags2 |= AV_CODEC_FLAG2_DROP_FRAME_TIMECODE | AV_CODEC_FLAG2_IGNORE_CROP | AV_CODEC_FLAG2_SHOW_ALL;
 		m_ctx->bit_rate = 0;
 		m_ctx->refcounted_frames = 0;
 		m_ctx->pix_fmt = AV_PIX_FMT_YUV420P;

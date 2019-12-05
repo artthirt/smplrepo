@@ -294,6 +294,8 @@ void VideoFrame::paintEvent(QPaintEvent *event)
 
 	painter.drawText(10, 30, "fps " + QString::number(m_fps, 'f', 0));
 
+    painter.drawText(10, height() - 20, QString::number(m_image.width()) + "x" + QString::number(m_image.height()));
+
 	painter.end();
 
 //	QGLWidget::paintEvent(event);

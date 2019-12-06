@@ -222,7 +222,9 @@ void WebSock::doGetDecodedFrame()
 void WebSock::doSendPktToCodec()
 {
 	while(!m_done){
-		if(!m_framesH264.empty()){
+        decodeH264();
+
+        if(!m_framesH264.empty()){
 			//m_mutexh.lock();
 			QByteArray data = m_framesH264.front();
 			//m_mutexh.unlock();
@@ -241,8 +243,6 @@ void WebSock::doSendPktToCodec()
 
 bool WebSock::doSendPkt(const QByteArray& data)
 {
-    decodeH264();
-
     AVPacket pkt;
     av_init_packet(&pkt);
 

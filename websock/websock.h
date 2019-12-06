@@ -72,6 +72,7 @@ private:
 
 	AVCodec* m_codec		= nullptr;
 	AVCodecContext *m_ctx	= nullptr;
+    AVFrame m_frame;
 	bool m_done				= false;
 	uint m_numpack			= 0;
     bool m_is_update_frame  = false;;

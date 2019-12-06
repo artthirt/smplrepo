@@ -9,7 +9,7 @@
 TestSender::TestSender(QObject *parent) : QThread(parent)
 {
     m_sender = nullptr;
-    m_timeout = 50;
+    m_timeout = 10;
 }
 
 TestSender::~TestSender()
@@ -80,6 +80,12 @@ void TestSender::onTimeout()
         return;
     }
     QByteArray data = m_file.read(size);
+
+    QFile f("test.h264");
+    f.open(QIODevice::WriteOnly | QIODevice::Append);
+    f.write(data);
+    f.close();
+
     if(m_file.atEnd())
         m_file.close();
     m_mutex.unlock();

@@ -70,6 +70,8 @@ WebSock::WebSock(QObject *parent) : QThread(parent)
 
 	m_done = false;
 
+    memset(&m_frame, 0, sizeof(m_frame));
+
 	initH264();
 
     m_decodeThread.reset(new std::thread(std::bind(&WebSock::doSendPktToCodec, this)));
@@ -239,6 +241,7 @@ void WebSock::doSendPktToCodec()
 
 bool WebSock::doSendPkt(const QByteArray& data)
 {
+    decodeH264();
 
     AVPacket pkt;
     av_init_packet(&pkt);
@@ -265,23 +268,23 @@ bool WebSock::doSendPkt(const QByteArray& data)
 
     m_is_update_frame = true;
     if(res < 0){
-        char buf[256] = {0};
-        av_make_error_string(buf, 256, res);
-        qDebug("error %s \n", buf);
+//        char buf[256] = {0};
+//        av_make_error_string(buf, 256, res);
+//        qDebug("error %s \n", buf);
     }else{
-        decodeH264();
     }
     return res != AVERROR(EAGAIN);
 }
 
 void WebSock::decodeH264()
 {
-	AVFrame *picture = av_frame_alloc();
-	memset(picture, 0, sizeof(picture));
+//	AVFrame *picture = av_frame_alloc();
+//	memset(picture, 0, sizeof(picture));
 
-    parseH264(picture);
-
-	av_frame_free(&picture);
+    if(parseH264(&m_frame)){
+        av_frame_unref(&m_frame);
+    }
+//	av_frame_free(&picture);
 }
 
 bool WebSock::parseH264(AVFrame *picture)
@@ -292,21 +295,13 @@ bool WebSock::parseH264(AVFrame *picture)
         res = avcodec_receive_frame(m_ctx, picture);
         m_mutexh.unlock();
 
-        if(res < 0){
-            m_is_update_frame = false;
-            char buf[256] = {0};
-            av_make_error_string(buf, 256, res);
-            qDebug("error %s \n", buf);
-            return false;
-        }
-
         if(res == 0){
             m_is_update_frame = false;
             createImage(picture);
         }
     }while(res != AVERROR(EAGAIN));
     m_is_update_frame = false;
-    return res == AVERROR(EAGAIN);
+    return res >= 0;
 }
 
 void WebSock::createImage(AVFrame *picture)

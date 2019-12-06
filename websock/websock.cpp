@@ -185,57 +185,18 @@ void WebSock::initH264()
 	}else{
 		m_ctx = avcodec_alloc_context3(m_codec);
 
-//        if(m_codec->capabilities & AV_CODEC_CAP_TRUNCATED) {
-//            m_ctx->flags |= AV_CODEC_FLAG_TRUNCATED;
-//		}
-//		if(m_codec->capabilities & CODEC_FLAG2_CHUNKS)
-//        m_ctx->flags2 |= AV_CODEC_FLAG2_NO_OUTPUT;
-
-////        if( (m_codec->capabilities & AV_CODEC_CAP_TRUNCATED) != 0)
-////            m_ctx->flags |= AV_CODEC_FLAG_TRUNCATED;
-//        m_ctx->flags |= AV_CODEC_FLAG_LOW_DELAY | AV_CODEC_FLAG_LOOP_FILTER;
-//		//m_ctx->flags |= CODEC_FLAG_LOOP_FILTER;
-
-////		m_ctx->flags2 |= CODEC_FLAG2_FAST | CODEC_FLAG2_NO_OUTPUT
-////				| CODEC_FLAG2_DROP_FRAME_TIMECODE | CODEC_FLAG2_IGNORE_CROP
-////				| CODEC_FLAG2_SHOW_ALL;
-//        m_ctx->flags2 |= AV_CODEC_FLAG2_NO_OUTPUT | AV_CODEC_FLAG2_FAST;
-//        m_ctx->flags2 |= AV_CODEC_FLAG2_DROP_FRAME_TIMECODE | AV_CODEC_FLAG2_IGNORE_CROP | AV_CODEC_FLAG2_SHOW_ALL;
-//		m_ctx->bit_rate = 0;
-//		m_ctx->pix_fmt = AV_PIX_FMT_YUV420P;
-//		m_ctx->field_order = AV_FIELD_UNKNOWN;
-//		m_ctx->request_sample_fmt = AV_SAMPLE_FMT_NONE;
-//		m_ctx->workaround_bugs = FF_BUG_AUTODETECT;
-//		m_ctx->strict_std_compliance = FF_COMPLIANCE_NORMAL;
-//		m_ctx->error_concealment = FF_EC_DEBLOCK;
-//        m_ctx->pkt_timebase.num = 1;
-//		m_ctx->pkt_timebase.den = -1;
-//		m_ctx->extradata = 0;
-//		m_ctx->idct_algo = FF_IDCT_AUTO;
-//		m_ctx->error_concealment = FF_EC_DEBLOCK;
-//        m_ctx->thread_count = 16;
-//        m_ctx->thread_type = FF_THREAD_FRAME;
-//        m_ctx->thread_safe_callbacks = 0;
-//        m_ctx->skip_loop_filter = AVDISCARD_ALL;
-//		m_ctx->skip_idct = AVDISCARD_DEFAULT;
-//		m_ctx->skip_frame = AVDISCARD_DEFAULT;
-
-		const int CWidth = 640;
-		const int CHeight = 480;
-
-		m_ctx->width = CWidth;
-		m_ctx->height = CHeight;
-		m_ctx->coded_width = CWidth;
-        m_ctx->coded_height = CHeight;
-
         AVDictionary *dict = nullptr;
-        av_dict_set(&dict, "threads", "32", 0);
-        av_dict_set(&dict, "framerate", "60", 0);
+        av_dict_set(&dict, "threads", "auto", 0);
+        av_dict_set(&dict, "framerate", "30", 0);
+        av_dict_set(&dict, "refcounted_frames", "1", 0);
+        av_dict_set_int(&dict, "lowres", m_codec->max_lowres, 0);
 
         if(avcodec_open2(m_ctx, m_codec, &dict) < 0) {
 			printf("Error: could not open codec.\n");
 			return;
 		}
+        m_ctx->pkt_timebase.den = 1200000;
+        m_ctx->pkt_timebase.num = 1;
     }
 }
 

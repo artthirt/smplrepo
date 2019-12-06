@@ -166,6 +166,12 @@ void WebSock::tryParseData(const QByteArray &data)
 				m_framesH264.push(pkt.data);
 				//m_mutexh.unlock();
 			}
+//            QFile f("test.bin");
+//            f.open(QIODevice::WriteOnly | QIODevice::Append);
+//            uint size = pkt.data.size();
+//            f.write((char*)&size, sizeof(size));
+//            f.write(pkt.data);
+//            f.close();
 		}
 //		QFile f("1.jpg");
 //		f.open(QIODevice::WriteOnly);
@@ -263,10 +269,6 @@ bool WebSock::doSendPkt(const QByteArray& data)
         av_make_error_string(buf, 256, res);
         qDebug("error %s \n", buf);
     }else{
-//        QFile f("test.h264");
-//        f.open(QIODevice::WriteOnly | QIODevice::Append);
-//        f.write(data);
-//        f.close();
         decodeH264();
     }
     return res != AVERROR(EAGAIN);

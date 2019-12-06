@@ -14,7 +14,7 @@ MainWindow::MainWindow(QWidget *parent)
     m_testSender.reset(new TestSender());
     m_testSender->startThread();
 
-    m_testSender->setFilename("test.h264");
+    m_testSender->setFilename("test.bin");
     m_testSender->setSender(m_websock.get());
 
 	connect(m_websock.get(), SIGNAL(sendImage(QImage)), ui->widgetFrame, SLOT(onReceiveImage(QImage)), Qt::QueuedConnection);

@@ -9,7 +9,7 @@
 TestSender::TestSender(QObject *parent) : QThread(parent)
 {
     m_sender = nullptr;
-    m_timeout = 500;
+    m_timeout = 50;
 }
 
 TestSender::~TestSender()
@@ -42,9 +42,10 @@ void TestSender::startThread()
 
 void TestSender::startPlay()
 {
-    if(m_fileName.isEmpty() || !QFile::exists(m_fileName))
+    if(m_fileName.isEmpty() || !QFile::exists(m_fileName)){
+        qDebug("File not exists or not set");
         return;
-
+    }
 
     m_mutex.lock();
     if(m_file.isOpen())
@@ -70,7 +71,15 @@ void TestSender::onTimeout()
     }
 
     m_mutex.lock();
-    QByteArray data = m_file.read(ARRAY_SIZE);
+    uint size = 0;
+    m_file.read((char*)&size, sizeof(size));
+    if(size > 99999999){
+        m_mutex.lock();
+        m_file.close();
+        m_mutex.unlock();
+        return;
+    }
+    QByteArray data = m_file.read(size);
     if(m_file.atEnd())
         m_file.close();
     m_mutex.unlock();

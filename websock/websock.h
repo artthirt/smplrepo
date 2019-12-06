@@ -79,10 +79,14 @@ private:
 	void initH264();
     void doGetDecodedFrame();
     void doSendPktToCodec();
-    void doSendPkt(const QByteArray &data);
+    bool doSendPkt(const QByteArray &data);
     void decodeH264();
     bool parseH264(AVFrame *picture);
 	void createImage(AVFrame *picture);
+
+    // QObject interface
+public:
+    bool event(QEvent *ev);
 };
 
 #endif // WEBSOCK_H

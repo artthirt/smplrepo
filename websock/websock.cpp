@@ -14,6 +14,8 @@
 #include <sys/socket.h>
 #endif
 
+#include "common.h"
+
 #define MAX_FRAMES			8
 
 #define MAX_BUFFERS			3000
@@ -71,7 +73,7 @@ WebSock::WebSock(QObject *parent) : QThread(parent)
 	initH264();
 
     m_decodeThread.reset(new std::thread(std::bind(&WebSock::doSendPktToCodec, this)));
-    m_decodeThread2.reset(new std::thread(std::bind(&WebSock::doGetDecodedFrame, this)));
+    //m_decodeThread2.reset(new std::thread(std::bind(&WebSock::doGetDecodedFrame, this)));
 }
 
 WebSock::~WebSock()
@@ -187,36 +189,36 @@ void WebSock::initH264()
 //            m_ctx->flags |= AV_CODEC_FLAG_TRUNCATED;
 //		}
 //		if(m_codec->capabilities & CODEC_FLAG2_CHUNKS)
-        m_ctx->flags2 |= AV_CODEC_FLAG2_NO_OUTPUT;
+//        m_ctx->flags2 |= AV_CODEC_FLAG2_NO_OUTPUT;
 
-//        if( (m_codec->capabilities & AV_CODEC_CAP_TRUNCATED) != 0)
-//            m_ctx->flags |= AV_CODEC_FLAG_TRUNCATED;
-        m_ctx->flags |= AV_CODEC_FLAG_LOW_DELAY | AV_CODEC_FLAG_LOOP_FILTER;
-		//m_ctx->flags |= CODEC_FLAG_LOOP_FILTER;
+////        if( (m_codec->capabilities & AV_CODEC_CAP_TRUNCATED) != 0)
+////            m_ctx->flags |= AV_CODEC_FLAG_TRUNCATED;
+//        m_ctx->flags |= AV_CODEC_FLAG_LOW_DELAY | AV_CODEC_FLAG_LOOP_FILTER;
+//		//m_ctx->flags |= CODEC_FLAG_LOOP_FILTER;
 
-//		m_ctx->flags2 |= CODEC_FLAG2_FAST | CODEC_FLAG2_NO_OUTPUT
-//				| CODEC_FLAG2_DROP_FRAME_TIMECODE | CODEC_FLAG2_IGNORE_CROP
-//				| CODEC_FLAG2_SHOW_ALL;
-        m_ctx->flags2 |= AV_CODEC_FLAG2_NO_OUTPUT | AV_CODEC_FLAG2_FAST;
-        m_ctx->flags2 |= AV_CODEC_FLAG2_DROP_FRAME_TIMECODE | AV_CODEC_FLAG2_IGNORE_CROP | AV_CODEC_FLAG2_SHOW_ALL;
-		m_ctx->bit_rate = 0;
-		m_ctx->pix_fmt = AV_PIX_FMT_YUV420P;
-		m_ctx->field_order = AV_FIELD_UNKNOWN;
-		m_ctx->request_sample_fmt = AV_SAMPLE_FMT_NONE;
-		m_ctx->workaround_bugs = FF_BUG_AUTODETECT;
-		m_ctx->strict_std_compliance = FF_COMPLIANCE_NORMAL;
-		m_ctx->error_concealment = FF_EC_DEBLOCK;
-        m_ctx->pkt_timebase.num = 1;
-		m_ctx->pkt_timebase.den = -1;
-		m_ctx->extradata = 0;
-		m_ctx->idct_algo = FF_IDCT_AUTO;
-		m_ctx->error_concealment = FF_EC_DEBLOCK;
-        m_ctx->thread_count = 16;
-        m_ctx->thread_type = FF_THREAD_FRAME;
-        m_ctx->thread_safe_callbacks = 0;
-		m_ctx->skip_loop_filter = AVDISCARD_DEFAULT;
-		m_ctx->skip_idct = AVDISCARD_DEFAULT;
-		m_ctx->skip_frame = AVDISCARD_DEFAULT;
+////		m_ctx->flags2 |= CODEC_FLAG2_FAST | CODEC_FLAG2_NO_OUTPUT
+////				| CODEC_FLAG2_DROP_FRAME_TIMECODE | CODEC_FLAG2_IGNORE_CROP
+////				| CODEC_FLAG2_SHOW_ALL;
+//        m_ctx->flags2 |= AV_CODEC_FLAG2_NO_OUTPUT | AV_CODEC_FLAG2_FAST;
+//        m_ctx->flags2 |= AV_CODEC_FLAG2_DROP_FRAME_TIMECODE | AV_CODEC_FLAG2_IGNORE_CROP | AV_CODEC_FLAG2_SHOW_ALL;
+//		m_ctx->bit_rate = 0;
+//		m_ctx->pix_fmt = AV_PIX_FMT_YUV420P;
+//		m_ctx->field_order = AV_FIELD_UNKNOWN;
+//		m_ctx->request_sample_fmt = AV_SAMPLE_FMT_NONE;
+//		m_ctx->workaround_bugs = FF_BUG_AUTODETECT;
+//		m_ctx->strict_std_compliance = FF_COMPLIANCE_NORMAL;
+//		m_ctx->error_concealment = FF_EC_DEBLOCK;
+//        m_ctx->pkt_timebase.num = 1;
+//		m_ctx->pkt_timebase.den = -1;
+//		m_ctx->extradata = 0;
+//		m_ctx->idct_algo = FF_IDCT_AUTO;
+//		m_ctx->error_concealment = FF_EC_DEBLOCK;
+//        m_ctx->thread_count = 16;
+//        m_ctx->thread_type = FF_THREAD_FRAME;
+//        m_ctx->thread_safe_callbacks = 0;
+//        m_ctx->skip_loop_filter = AVDISCARD_ALL;
+//		m_ctx->skip_idct = AVDISCARD_DEFAULT;
+//		m_ctx->skip_frame = AVDISCARD_DEFAULT;
 
 		const int CWidth = 640;
 		const int CHeight = 480;
@@ -226,7 +228,11 @@ void WebSock::initH264()
 		m_ctx->coded_width = CWidth;
         m_ctx->coded_height = CHeight;
 
-		if(avcodec_open2(m_ctx, m_codec, NULL) < 0) {
+        AVDictionary *dict = nullptr;
+        av_dict_set(&dict, "threads", "32", 0);
+        av_dict_set(&dict, "framerate", "60", 0);
+
+        if(avcodec_open2(m_ctx, m_codec, &dict) < 0) {
 			printf("Error: could not open codec.\n");
 			return;
 		}
@@ -250,17 +256,21 @@ void WebSock::doSendPktToCodec()
 		if(!m_framesH264.empty()){
 			//m_mutexh.lock();
 			QByteArray data = m_framesH264.front();
-			m_framesH264.pop();
 			//m_mutexh.unlock();
+            m_framesH264.pop();
 
-            doSendPkt(data);
+            bool res = doSendPkt(data);
+//            if(res){
+//            }else{
+//                std::this_thread::sleep_for(std::chrono::milliseconds(2));
+//            }
         }else{
             std::this_thread::sleep_for(std::chrono::milliseconds(2));
         }
     }
 }
 
-void WebSock::doSendPkt(const QByteArray& data)
+bool WebSock::doSendPkt(const QByteArray& data)
 {
 
     AVPacket pkt;
@@ -269,31 +279,36 @@ void WebSock::doSendPkt(const QByteArray& data)
     pkt.dts = AV_NOPTS_VALUE;
     pkt.stream_index = 0;
     pkt.flags = 0;
-    pkt.side_data = 0;
+    pkt.side_data = nullptr;
     pkt.side_data_elems = 0;
     pkt.duration = 0;
     pkt.pos = -1;
-    pkt.convergence_duration = AV_NOPTS_VALUE;
 
     pkt.pts = m_numpack;
     pkt.data = (uint8_t*)data.data();
     pkt.size = data.size();
 
     int res = 0;
+
     do{
         m_mutexh.lock();
         res = avcodec_send_packet(m_ctx, &pkt);
         m_mutexh.unlock();
-        m_is_update_frame = true;
-    }while(res == -11);
+    }while(res == AVERROR(EAGAIN));
 
+    m_is_update_frame = true;
     if(res < 0){
         char buf[256] = {0};
         av_make_error_string(buf, 256, res);
         qDebug("error %s \n", buf);
     }else{
-        //decodeH264();
+//        QFile f("test.h264");
+//        f.open(QIODevice::WriteOnly | QIODevice::Append);
+//        f.write(data);
+//        f.close();
+        decodeH264();
     }
+    return res != AVERROR(EAGAIN);
 }
 
 void WebSock::decodeH264()
@@ -308,25 +323,27 @@ void WebSock::decodeH264()
 
 bool WebSock::parseH264(AVFrame *picture)
 {
-    m_mutexh.lock();
-    int res = avcodec_receive_frame(m_ctx, picture);
-    m_mutexh.unlock();
+    int res = 0;
+    do{
+        m_mutexh.lock();
+        res = avcodec_receive_frame(m_ctx, picture);
+        m_mutexh.unlock();
 
-	if(res < 0){
-        m_is_update_frame = false;
-        char buf[256] = {0};
-		av_make_error_string(buf, 256, res);
-		qDebug("error %s \n", buf);
-        return false;
-	}
+        if(res < 0){
+            m_is_update_frame = false;
+            char buf[256] = {0};
+            av_make_error_string(buf, 256, res);
+            qDebug("error %s \n", buf);
+            return false;
+        }
 
-    if(res == 0){
-        m_is_update_frame = false;
-        createImage(picture);
-        return true;
-	}
+        if(res == 0){
+            m_is_update_frame = false;
+            createImage(picture);
+        }
+    }while(res != AVERROR(EAGAIN));
     m_is_update_frame = false;
-    return false;
+    return res == AVERROR(EAGAIN);
 }
 
 void WebSock::createImage(AVFrame *picture)
@@ -381,7 +398,17 @@ void WebSock::createImage(AVFrame *picture)
 		m_frames.back().image = image;
 		m_frames.back().done = true;
 		m_mutex.unlock();
-	}
+    }
+}
+
+bool WebSock::event(QEvent *ev)
+{
+    if(ev->type() == EventTest::EVENT){
+        EventTest *et = (EventTest*)ev;
+        m_framesH264.push(et->data);
+        return true;
+    };
+    return QThread::event(ev);
 }
 
 ///////////////////////////

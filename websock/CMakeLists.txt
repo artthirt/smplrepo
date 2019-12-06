@@ -14,7 +14,7 @@ find_package(Qt5 COMPONENTS Widgets REQUIRED)
 find_package(Qt5 COMPONENTS Network REQUIRED)
 find_package(Qt5 COMPONENTS OpenGL REQUIRED)
 
-add_executable(websock main.cpp websock.cpp mainwindow.cpp mainwindow.ui videodata.cpp videoframe.cpp videoframe.ui DataStream.cpp)
+add_executable(websock main.cpp websock.cpp mainwindow.cpp mainwindow.ui videodata.cpp videoframe.cpp videoframe.ui DataStream.cpp testsender.cpp)
 
 set(INCLUDES ./
     ./include/)

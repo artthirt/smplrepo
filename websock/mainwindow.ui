@@ -26,9 +26,16 @@
      <x>0</x>
      <y>0</y>
      <width>457</width>
-     <height>21</height>
+     <height>30</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuTest">
+    <property name="title">
+     <string>Test</string>
+    </property>
+    <addaction name="actionStart_test"/>
+   </widget>
+   <addaction name="menuTest"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QToolBar" name="toolBar">
@@ -49,6 +56,14 @@
    </property>
    <property name="text">
     <string>Rotate by 90</string>
+   </property>
+  </action>
+  <action name="actionStart_test">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Start test</string>
    </property>
   </action>
  </widget>

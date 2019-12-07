@@ -20,7 +20,7 @@
 
 #define MAX_BUFFERS			3000
 
-const uchar JPEG_STRING[] = {0xff, 0xd8, 0xff, 0xe0};
+const uchar JPEG_STRING[] = {0xff, 0xd8, 0xff};
 
 bool check_string(const char* data1, const char* data2, int len)
 {
@@ -135,7 +135,7 @@ void WebSock::run()
 	m_sock->moveToThread(this);
 	m_sock->bind(8000);
 
-	int buf = 5 * 1024 * 1024;
+	int buf = 7 * 1024 * 1024;
 	setsockopt(m_sock->socketDescriptor(), SOL_SOCKET, SO_RCVBUF, (char*)&buf, sizeof(buf));
 
 	connect(m_sock.get(), SIGNAL(readyRead()), this, SLOT(onReadyRead()));
@@ -155,7 +155,7 @@ void WebSock::tryParseData(const QByteArray &data)
 		Packet pkt = m_vData.getFrame();
 		m_vData.removeFrame();
 
-		if(check_string(pkt.data, (char*)JPEG_STRING, 4)){
+		if(check_string(pkt.data, (char*)JPEG_STRING, 3)){
 			if(m_frames.size() < MAX_FRAMES){
 					m_mutex.lock();
 					m_frames.push(Frame(pkt.data));
@@ -168,12 +168,12 @@ void WebSock::tryParseData(const QByteArray &data)
 				m_framesH264.push(pkt.data);
 				//m_mutexh.unlock();
 			}
-//            QFile f("test.bin");
-//            f.open(QIODevice::WriteOnly | QIODevice::Append);
-//            uint size = pkt.data.size();
-//            f.write((char*)&size, sizeof(size));
-//            f.write(pkt.data);
-//            f.close();
+//			QFile f("test.jpg");
+//			f.open(QIODevice::WriteOnly);
+//			uint size = pkt.data.size();
+//			//f.write((char*)&size, sizeof(size));
+//			f.write(pkt.data);
+//			f.close();
 		}
 //		QFile f("1.jpg");
 //		f.open(QIODevice::WriteOnly);

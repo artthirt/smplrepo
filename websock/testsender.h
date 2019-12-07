@@ -19,11 +19,14 @@ public:
     void setFilename(const QString& name);
     QString fileName() const;
 
+	bool isOpenFile();
+	float progress() const;
+
     void setSender(QObject* sender);
 
     void startThread();
 
-    void startPlay();
+	bool startPlay();
     void stopPlay();
 
 signals:

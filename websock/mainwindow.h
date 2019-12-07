@@ -3,12 +3,16 @@
 
 #include <QMainWindow>
 
+#include <QTimer>
+
 #include "websock.h"
 #include "testsender.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
+
+class QProgressBar;
 
 class MainWindow : public QMainWindow
 {
@@ -25,8 +29,12 @@ private slots:
 
     void on_actionStart_test_triggered(bool checked);
 
+	void onTimeout();
+
 private:
 	Ui::MainWindow *ui;
+	QProgressBar *m_progressBar;
+	QTimer m_timer;
 
 	std::unique_ptr<WebSock> m_websock;
     std::unique_ptr<TestSender> m_testSender;

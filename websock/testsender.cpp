@@ -9,13 +9,13 @@
 TestSender::TestSender(QObject *parent) : QThread(parent)
 {
     m_sender = nullptr;
-    m_timeout = 5;
+	m_timeout = 5;
 }
 
 TestSender::~TestSender()
 {
     quit();
-    wait();
+	wait();
 }
 
 void TestSender::setFilename(const QString &name)
@@ -26,7 +26,20 @@ void TestSender::setFilename(const QString &name)
 
 QString TestSender::fileName() const
 {
-    return m_fileName;
+	return m_fileName;
+}
+
+bool TestSender::isOpenFile()
+{
+	return m_file.isOpen();
+}
+
+float TestSender::progress() const
+{
+	if(!m_file.isOpen())
+		return 0;
+	float d = (float)m_file.pos()/m_file.size();
+	return d;
 }
 
 void TestSender::setSender(QObject *sender)
@@ -40,11 +53,11 @@ void TestSender::startThread()
     start();
 }
 
-void TestSender::startPlay()
+bool TestSender::startPlay()
 {
     if(m_fileName.isEmpty() || !QFile::exists(m_fileName)){
         qDebug("File not exists or not set");
-        return;
+		return false;
     }
 
     m_mutex.lock();
@@ -54,6 +67,8 @@ void TestSender::startPlay()
     m_file.open(QIODevice::ReadOnly);
     m_file.seek(0);
     m_mutex.unlock();
+
+	return true;
 }
 
 void TestSender::stopPlay()

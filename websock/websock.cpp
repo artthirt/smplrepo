@@ -261,9 +261,9 @@ bool WebSock::doSendPkt(const QByteArray& data)
     int res = 0;
 
     do{
-        m_mutexh.lock();
+		//m_mutexh.lock();
         res = avcodec_send_packet(m_ctx, &pkt);
-        m_mutexh.unlock();
+		//m_mutexh.unlock();
     }while(res == AVERROR(EAGAIN));
 
     m_is_update_frame = true;
@@ -291,9 +291,9 @@ bool WebSock::parseH264(AVFrame *picture)
 {
     int res = 0;
     do{
-        m_mutexh.lock();
+		//m_mutexh.lock();
         res = avcodec_receive_frame(m_ctx, picture);
-        m_mutexh.unlock();
+		//m_mutexh.unlock();
 
         if(res == 0){
             m_is_update_frame = false;
@@ -309,7 +309,7 @@ void WebSock::createImage(AVFrame *picture)
 #if 1
 	QImage image(picture->width, picture->height, QImage::Format_ARGB32);
 
-//#pragma omp parallel for
+#pragma omp parallel for
 	for(int y = 0; y < picture->height; ++y){
 		uint8_t* il = &picture->data[0][y * picture->linesize[0]];
 		QRgb* sc = (QRgb*)image.scanLine(y);
@@ -321,7 +321,7 @@ void WebSock::createImage(AVFrame *picture)
 	}
 
 #if 1
-//#pragma omp parallel for
+#pragma omp parallel for
 	for(int y = 0; y < picture->height/2; ++y){
 		uint8_t* il1 = &picture->data[1][y * picture->linesize[1]];
 		uint8_t* il2 = &picture->data[2][y * picture->linesize[2]];

@@ -16,6 +16,7 @@ DialogSetFileName::~DialogSetFileName()
 void DialogSetFileName::setFileName(const QString &fn)
 {
 	m_fileName = fn;
+	ui->le_FileName->setText(fn);
 }
 
 QString DialogSetFileName::fileName() const

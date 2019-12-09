@@ -379,15 +379,16 @@ void WebSock::createImage(AVFrame *picture)
 	QImage image(picture->width, picture->height, QImage::Format_ARGB32);
 
     int numthr = omp_get_num_procs();
-    omp_set_num_threads(numthr * 2);
+
+	if(numthr > 6)
+		omp_set_num_threads(numthr/2);
 
 #pragma omp parallel for
 	for(int y = 0; y < picture->height; ++y){
 		uint8_t* il = &picture->data[0][y * picture->linesize[0]];
 		QRgb* sc = (QRgb*)image.scanLine(y);
 		for(int x = 0; x < picture->width; ++x){
-			uchar r = 0;
-			r = il[x];
+			uchar r = il[x];
 			sc[x] = r;
 		}
 	}

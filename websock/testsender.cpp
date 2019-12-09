@@ -9,7 +9,7 @@
 TestSender::TestSender(QObject *parent) : QThread(parent)
 {
     m_sender = nullptr;
-	m_timeout = 5;
+    m_timeout = 16;
 }
 
 TestSender::~TestSender()

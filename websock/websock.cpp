@@ -72,6 +72,8 @@ WebSock::WebSock(QObject *parent) : QThread(parent)
 
 	m_done = false;
 
+	m_fileName = "test.bin";
+
     memset(&m_frame, 0, sizeof(m_frame));
 
 	initH264();
@@ -102,6 +104,26 @@ WebSock::~WebSock()
 		av_freep(&m_ctx);
 #endif
 	}
+}
+
+void WebSock::setRecord(bool val)
+{
+	m_isRecord = val;
+}
+
+bool WebSock::isRecord() const
+{
+	return m_isRecord;
+}
+
+void WebSock::setFileName(const QString &fn)
+{
+	m_fileName = fn;
+}
+
+QString WebSock::fileName() const
+{
+	return m_fileName;
 }
 
 void WebSock::onReadyRead()
@@ -170,12 +192,14 @@ void WebSock::tryParseData(const QByteArray &data)
 				m_framesH264.push(pkt.data);
 				//m_mutexh.unlock();
 			}
-//			QFile f("test.jpg");
-//			f.open(QIODevice::WriteOnly);
-//			uint size = pkt.data.size();
-//			//f.write((char*)&size, sizeof(size));
-//			f.write(pkt.data);
-//			f.close();
+			if(m_isRecord){
+				QFile f(m_fileName);
+				f.open(QIODevice::WriteOnly | QIODevice::Append);
+				uint size = pkt.data.size();
+				f.write((char*)&size, sizeof(size));
+				f.write(pkt.data);
+				f.close();
+			}
 		}
 //		QFile f("1.jpg");
 //		f.open(QIODevice::WriteOnly);

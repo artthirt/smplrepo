@@ -3,6 +3,8 @@
 
 #include <QProgressBar>
 
+#include "dialogsetfilename.h"
+
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
 	, ui(new Ui::MainWindow)
@@ -18,6 +20,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     m_testSender->setFilename("test.bin");
     m_testSender->setSender(m_websock.get());
+
+	m_websock->setFileName(m_testSender->fileName());
 
 	m_progressBar = new QProgressBar(this);
 	m_progressBar->setRange(0, 100);
@@ -70,4 +74,20 @@ void MainWindow::onTimeout()
 	}else{
 		m_progressBar->hide();
 	}
+}
+
+void MainWindow::on_actionSet_Record_FileName_triggered()
+{
+	DialogSetFileName dlg;
+	dlg.setFileName(m_testSender->fileName());
+
+	if(dlg.exec()){
+		m_testSender->setFilename(dlg.fileName());
+		m_websock->setFileName(dlg.fileName());
+	}
+}
+
+void MainWindow::on_actionStart_record_triggered(bool checked)
+{
+	m_websock->setRecord(checked);
 }

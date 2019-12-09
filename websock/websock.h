@@ -26,6 +26,12 @@ public:
 	explicit WebSock(QObject *parent = nullptr);
 	~WebSock();
 
+	void setRecord(bool val);
+	bool isRecord()  const;
+
+	void setFileName(const QString &fn);
+	QString fileName() const;
+
 signals:
 	void sendImage(QImage);
 
@@ -39,6 +45,7 @@ protected:
 private:
 	std::unique_ptr<QUdpSocket> m_sock;
 	VideoData m_vData;
+	QString m_fileName;
 
 	struct Frame{
 		QByteArray data;
@@ -62,6 +69,8 @@ private:
 	std::queue<QByteArray> m_framesH264;
 	std::mutex m_mutex;
 	std::mutex m_mutexh;
+
+	bool m_isRecord;
 
 	std::unique_ptr<QTimer> m_timer;
 

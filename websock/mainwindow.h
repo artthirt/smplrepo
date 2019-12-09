@@ -31,6 +31,10 @@ private slots:
 
 	void onTimeout();
 
+	void on_actionSet_Record_FileName_triggered();
+
+	void on_actionStart_record_triggered(bool checked);
+
 private:
 	Ui::MainWindow *ui;
 	QProgressBar *m_progressBar;

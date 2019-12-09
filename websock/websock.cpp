@@ -40,6 +40,24 @@ inline int clamp(int x){
 	return x > 255? 255 : (x < 0? 0 : x);
 }
 
+inline int minFast(int a, int b)
+{
+	int z = a - b;
+	int i = (~(z >> 31)) & 0x1;
+	return a - i * z;
+}
+
+inline int maxFast(int a, int b)
+{
+	int c = minFast(-a, -b);
+	return -c;
+}
+
+inline int clampFast(int x)
+{
+	return minFast(255, maxFast(0, x));
+}
+
 inline int _Rgb(uchar r, uchar g, uchar b)
 {
 	return (int)(r | (g << 8) | (b << 16));
@@ -58,6 +76,31 @@ inline int conv_yuv_to_rgb(int Y, int U, int V)
 	B = clamp((298 * C + 516 * D + 128) >> 8);
 
 	return qRgb(R, G, B);
+}
+
+inline void conv_yuv_to_rgb(uchar Y0, uchar Y1, int U, int V, QRgb &rgb0, QRgb &rgb1)
+{
+	int R0, G0, B0, R1, G1, B1, C0, C1, D, E;
+
+	C0 = Y0 - 16;
+	C1 = Y1 - 16;
+	D = U - 128;
+	E = V - 128;
+
+	int T0 = 409 * E + 128;
+	int T1 = -100 * D - 208 * E + 128;
+	int T2 = 516 * D + 128;
+
+	R0 = clamp((298 * C0 + T0) >> 8);
+	G0 = clamp((298 * C0 + T1) >> 8);
+	B0 = clamp((298 * C0 + T2) >> 8);
+
+	R1 = clamp((298 * C1 + T0) >> 8);
+	G1 = clamp((298 * C1 + T1) >> 8);
+	B1 = clamp((298 * C1 + T2) >> 8);
+
+	rgb0 = qRgb(R0, G0, B0);
+	rgb1 = qRgb(R1, G1, B1);
 }
 
 //////////////////////////////
@@ -351,25 +394,29 @@ void WebSock::createImage(AVFrame *picture)
 
 #if 1
 #pragma omp parallel for
-	for(int y = 0; y < picture->height/2; ++y){
+	for(int y = 0; y < picture->height >> 1; ++y){
 		uint8_t* il1 = &picture->data[1][y * picture->linesize[1]];
 		uint8_t* il2 = &picture->data[2][y * picture->linesize[2]];
-		QRgb* sc1 = (QRgb*)image.scanLine(2 * y + 0);
-		QRgb* sc2 = (QRgb*)image.scanLine(2 * y + 1);
-		for(int x = 0; x < picture->width/2; ++x){
+		QRgb* sc1 = (QRgb*)image.scanLine((y << 1) + 0);
+		QRgb* sc2 = (QRgb*)image.scanLine((y << 1) + 1);
+		for(int x = 0; x < picture->width >> 1; ++x){
 			uchar g = 0, b = 0;
 			g = il1[x];
 			b = il2[x];
 
-			int col1 = conv_yuv_to_rgb(sc1[2 * x], g, b);
-			int col2 = conv_yuv_to_rgb(sc1[2 * x + 1], g, b);
-			int col3 = conv_yuv_to_rgb(sc2[2 * x], g, b);
-			int col4 = conv_yuv_to_rgb(sc2[2 * x + 1], g, b);
 
-			sc1[2 * x] = col1;
-			sc1[2 * x + 1] = col2;
-			sc2[2 * x] = col3;
-			sc2[2 * x + 1] = col4;
+			conv_yuv_to_rgb((uchar)sc1[(x << 1)], (uchar)sc1[(x << 1) + 1], g, b, sc1[(x << 1)], sc1[(x << 1) + 1]);
+			conv_yuv_to_rgb((uchar)sc2[(x << 1)], (uchar)sc2[(x << 1) + 1], g, b, sc2[(x << 1)], sc2[(x << 1) + 1]);
+
+//			int col1 = conv_yuv_to_rgb(sc1[(x << 1)], g, b);
+//			int col2 = conv_yuv_to_rgb(sc1[(x << 1) + 1], g, b);
+//			int col3 = conv_yuv_to_rgb(sc2[(x << 1)], g, b);
+//			int col4 = conv_yuv_to_rgb(sc2[(x << 1) + 1], g, b);
+
+//			sc1[(x << 1)] = col1;
+//			sc1[(x << 1) + 1] = col2;
+//			sc2[(x << 1)] = col3;
+//			sc2[(x << 1) + 1] = col4;
 		}
 	}
 
@@ -381,9 +428,7 @@ void WebSock::createImage(AVFrame *picture)
 
 	if(m_frames.size() < MAX_BUFFERS){
 		m_mutex.lock();
-		m_frames.push(Frame());
-		m_frames.back().image = image;
-		m_frames.back().done = true;
+		m_frames.push(Frame(image));
 		m_mutex.unlock();
     }
 }
@@ -416,6 +461,12 @@ WebSock::Frame::Frame(const WebSock::Frame &frame)
 	data = frame.data;
 	done = frame.done;
 	image = frame.image;
+}
+
+WebSock::Frame::Frame(const QImage &image)
+{
+	this->image = image;
+	done = true;
 }
 
 WebSock::Frame::~Frame()

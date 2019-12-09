@@ -58,6 +58,7 @@ private:
 		Frame();
 		Frame(const QByteArray& data);
 		Frame(const Frame &frame);
+		Frame(const QImage& image);
 		~Frame();
 
 		void start();

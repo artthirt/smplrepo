@@ -54,7 +54,8 @@ add_executable(websock main.cpp
 	DataStream.cpp
 	testsender.cpp
 	dialogsetfilename.cpp
-	dialogsetfilename.ui)
+        dialogsetfilename.ui
+        resource.qrc)
 
 set(INCLUDES ./
     ./include/)

@@ -35,6 +35,8 @@ public:
      */
     clBuffer createBuffer(size_t size, int type = READWRITE);
 
+    void freeBuffers();
+
     bool write(clBuffer buffer, const bytevector& data);
     bool read(clBuffer buffer, bytevector& data);
 

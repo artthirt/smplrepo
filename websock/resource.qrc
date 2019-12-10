@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>cl/convert.cl</file>
+    </qresource>
+</RCC>

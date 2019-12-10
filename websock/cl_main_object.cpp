@@ -24,10 +24,13 @@ public:
     cl_device_id device_id = nullptr;
     cl_uint num_devices = 1;
     cl_command_queue command_queue = nullptr;
+
+    bool m_isInit;
 };
 
 clMainPrivate::clMainPrivate()
 {
+    m_isInit = false;
 }
 
 clMainPrivate::~clMainPrivate()
@@ -39,6 +42,9 @@ clMainPrivate::~clMainPrivate()
 
 bool clMainPrivate::init(int type)
 {
+    if(m_isInit)
+        return true;
+
     cl_int ret;
 
     cl_device_type dev = CL_DEVICE_TYPE_DEFAULT;
@@ -52,6 +58,8 @@ bool clMainPrivate::init(int type)
     ret = clGetDeviceIDs(platform, dev, 1, &device_id, &num_devices);
     context = clCreateContext(nullptr, 1, &device_id, nullptr, nullptr, &ret);
     command_queue = clCreateCommandQueue(context, device_id, 0, &ret);
+
+    m_isInit = ret == 0;
 
     return ret == 0;
 }
@@ -155,6 +163,10 @@ public:
     clBuffer createBuffer(size_t size, int type){
         m_memobjs.push_back(std::make_shared<Mem>(context, size, type));
         return (clBuffer)(m_memobjs.size() - 1);
+    }
+
+    void freeBuffers(){
+        m_memobjs.clear();
     }
 
     bool setArg(clKernel k, u_int32_t index, clBuffer buffer){
@@ -299,6 +311,11 @@ clKernel clProgram::createKernel(const std::string &kern)
 clBuffer clProgram::createBuffer(size_t size, int type)
 {
     return m_priv->createBuffer(size, type);
+}
+
+void clProgram::freeBuffers()
+{
+    m_priv->freeBuffers();
 }
 
 bool clProgram::write(clBuffer buffer, const bytevector &data)

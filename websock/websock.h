@@ -100,4 +100,34 @@ public:
     bool event(QEvent *ev);
 };
 
+struct Image{
+    int width;
+    int height;
+    int linesize[8];
+    std::vector< uint8_t > data[8];
+};
+
+/**
+ * @brief saveImage
+ * save avframe to custom format
+ * @param picture
+ * @param fileName
+ */
+void saveImage(AVFrame* picture, const QString& fileName);
+/**
+ * @brief loadImage
+ * load from custom format to Image
+ * @param fileName
+ * @param picture
+ */
+void loadImage(const QString& fileName, Image *picture);
+/**
+ * @brief createImage
+ * create QImage from Image
+ * @param picture
+ * @return
+ */
+QImage createImage(const Image *picture);
+
+
 #endif // WEBSOCK_H

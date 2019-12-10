@@ -155,6 +155,8 @@ inline void conv_yuv_to_rgb(uchar Y0, uchar Y1, int U, int V, QRgb &rgb0, QRgb &
 
 //////////////////////////////
 
+//////////////////////////////
+
 WebSock::WebSock(QObject *parent) : QThread(parent)
 {
 	av_register_all();
@@ -428,6 +430,8 @@ void WebSock::createImage(AVFrame *picture)
 #if 1
 	QImage image(picture->width, picture->height, QImage::Format_ARGB32);
 
+//    saveImage(picture, "test.image");
+
     int numthr = omp_get_num_procs();
 
 	if(numthr > 6)
@@ -541,4 +545,81 @@ void WebSock::Frame::encode()
 	image = reader.read();
 
 	done = true;
+}
+
+//////////////////////////////////
+
+void saveImage(AVFrame* picture, const QString& fileName)
+{
+    QFile f(fileName);
+    f.open(QIODevice::WriteOnly);
+
+    f.write((char*)&picture->width, sizeof(int));
+    f.write((char*)&picture->height, sizeof(int));
+    f.write((char*)picture->linesize, sizeof(picture->linesize));
+    f.write((char*)picture->data[0], picture->linesize[0] * picture->height);
+    f.write((char*)picture->data[1], picture->linesize[1] * picture->height);
+    f.write((char*)picture->data[2], picture->linesize[2] * picture->height);
+
+    f.close();
+}
+
+void loadImage(const QString &fileName, Image *picture)
+{
+    QFile f(fileName);
+    f.open(QIODevice::ReadOnly);
+
+    f.read((char*)&picture->width, sizeof(int));
+    f.read((char*)&picture->height, sizeof(int));
+    f.read((char*)picture->linesize, sizeof(picture->linesize));
+
+    picture->data[0].resize(picture->linesize[0] * picture->height);
+    picture->data[1].resize(picture->linesize[1] * picture->height);
+    picture->data[2].resize(picture->linesize[2] * picture->height);
+
+    f.read((char*)picture->data[0].data(), picture->linesize[0] * picture->height);
+    f.read((char*)picture->data[1].data(), picture->linesize[1] * picture->height);
+    f.read((char*)picture->data[2].data(), picture->linesize[2] * picture->height);
+
+    f.close();
+}
+
+QImage createImage(const Image *picture)
+{
+    QImage image(picture->width, picture->height, QImage::Format_ARGB32);
+
+    int numthr = omp_get_num_procs();
+
+    if(numthr > 6)
+        omp_set_num_threads(numthr/2);
+
+#pragma omp parallel for
+    for(int y = 0; y < picture->height; ++y){
+        uint8_t* il = (uint8_t*)&picture->data[0].data()[y * picture->linesize[0]];
+        QRgb* sc = (QRgb*)image.scanLine(y);
+        for(int x = 0; x < picture->width; ++x){
+            uchar r = il[x];
+            sc[x] = r;
+        }
+    }
+
+#pragma omp parallel for
+    for(int y = 0; y < picture->height >> 1; ++y){
+        uint8_t* il1 = (uint8_t*)&picture->data[1].data()[y * picture->linesize[1]];
+        uint8_t* il2 = (uint8_t*)&picture->data[2].data()[y * picture->linesize[2]];
+        QRgb* sc1 = (QRgb*)image.scanLine((y << 1) + 0);
+        QRgb* sc2 = (QRgb*)image.scanLine((y << 1) + 1);
+        for(int x = 0; x < picture->width >> 1; ++x){
+            uchar g = 0, b = 0;
+            g = il1[x];
+            b = il2[x];
+
+
+            conv_yuv_to_rgb((uchar)sc1[(x << 1)], (uchar)sc1[(x << 1) + 1], g, b, sc1[(x << 1)], sc1[(x << 1) + 1]);
+            conv_yuv_to_rgb((uchar)sc2[(x << 1)], (uchar)sc2[(x << 1) + 1], g, b, sc2[(x << 1)], sc2[(x << 1) + 1]);
+
+        }
+    }
+
+    return image;
 }

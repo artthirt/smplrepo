@@ -6,6 +6,8 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
+set(HAVE_MMX ON)
+
 if(CMAKE_VERSION VERSION_LESS "3.7.0")
     set(CMAKE_INCLUDE_CURRENT_DIR ON)
 endif()
@@ -26,6 +28,10 @@ endif()
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 find_package(Qt5 COMPONENTS Network REQUIRED)
 find_package(Qt5 COMPONENTS OpenGL REQUIRED)
+
+if(HAVE_MMX)
+    add_definitions(-DUSE_MMX)
+endif()
 
 add_executable(websock main.cpp
 	websock.cpp

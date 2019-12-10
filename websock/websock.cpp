@@ -65,22 +65,70 @@ inline int _Rgb(uchar r, uchar g, uchar b)
 
 inline int conv_yuv_to_rgb(int Y, int U, int V)
 {
-	int R, G, B, C, D, E;
+    int R, G, B, C, D, E;
 
 	C = Y - 16;
 	D = U - 128;
 	E = V - 128;
 
-	R = clamp((298 * C + 409 * E + 128) >> 8);
-	G = clamp((298 * C - 100 * D - 208 * E + 128) >> 8);
-	B = clamp((298 * C + 516 * D + 128) >> 8);
+    R = clamp((298 * C + 409 * E + 128) >> 8);
+    G = clamp((298 * C - 100 * D - 208 * E + 128) >> 8);
+    B = clamp((298 * C + 516 * D + 128) >> 8);
 
-	return qRgb(R, G, B);
+    return qRgb(R, G, B);
 }
+
+#ifdef USE_MMX
+
+#include <immintrin.h>
+
+union SHI64{
+    short s[4];
+    long long ll;
+};
 
 inline void conv_yuv_to_rgb(uchar Y0, uchar Y1, int U, int V, QRgb &rgb0, QRgb &rgb1)
 {
-	int R0, G0, B0, R1, G1, B1, C0, C1, D, E;
+    short C0, C1, D, E;
+
+    SHI64 RGB0, RGB1;
+
+    C0 = Y0 - 16;
+    C1 = Y1 - 16;
+    D = U - 128;
+    E = V - 128;
+
+    int T0 = 409 * E + 128;
+    int T1 = -100 * D - 208 * E + 128;
+    int T2 = 516 * D + 128;
+
+    __m64 mRGB0, mRGB1, r1, r2, t1;
+
+    RGB0.s[2] = ((298 * C0 + T0) >> 8);
+    RGB0.s[1] = ((298 * C0 + T1) >> 8);
+    RGB0.s[0] = ((298 * C0 + T2) >> 8);
+
+    RGB1.s[2] = ((298 * C1 + T0) >> 8);
+    RGB1.s[1] = ((298 * C1 + T1) >> 8);
+    RGB1.s[0] = ((298 * C1 + T2) >> 8);
+
+    mRGB0 = _mm_cvtsi64x_si64(RGB0.ll);
+    mRGB1 = _mm_cvtsi64x_si64(RGB1.ll);
+
+    r1 = _m_packuswb(mRGB0, t1);
+    r2 = _m_packuswb(mRGB1, t1);
+
+    rgb0 = (QRgb)_m_to_int(r1);
+    rgb1 = (QRgb)_m_to_int(r2);
+    //rgb0 = qRgb(RGB0[0], RGB0[1], RGB0[2]);
+    //rgb1 = qRgb(RGB1[0], RGB1[1], RGB1[2]);
+}
+
+#else
+
+inline void conv_yuv_to_rgb(uchar Y0, uchar Y1, int U, int V, QRgb &rgb0, QRgb &rgb1)
+{
+    int R0, G0, B0, R1, G1, B1, C0, C1, D, E;
 
 	C0 = Y0 - 16;
 	C1 = Y1 - 16;
@@ -89,19 +137,21 @@ inline void conv_yuv_to_rgb(uchar Y0, uchar Y1, int U, int V, QRgb &rgb0, QRgb &
 
 	int T0 = 409 * E + 128;
 	int T1 = -100 * D - 208 * E + 128;
-	int T2 = 516 * D + 128;
+    int T2 = 516 * D + 128;
 
-	R0 = clamp((298 * C0 + T0) >> 8);
-	G0 = clamp((298 * C0 + T1) >> 8);
-	B0 = clamp((298 * C0 + T2) >> 8);
+    R0 = clamp((298 * C0 + T0) >> 8);
+    G0 = clamp((298 * C0 + T1) >> 8);
+    B0 = clamp((298 * C0 + T2) >> 8);
 
-	R1 = clamp((298 * C1 + T0) >> 8);
-	G1 = clamp((298 * C1 + T1) >> 8);
-	B1 = clamp((298 * C1 + T2) >> 8);
+    R1 = clamp((298 * C1 + T0) >> 8);
+    G1 = clamp((298 * C1 + T1) >> 8);
+    B1 = clamp((298 * C1 + T2) >> 8);
 
-	rgb0 = qRgb(R0, G0, B0);
-	rgb1 = qRgb(R1, G1, B1);
+    rgb0 = qRgb(R0, G0, B0);
+    rgb1 = qRgb(R1, G1, B1);
 }
+
+#endif
 
 //////////////////////////////
 

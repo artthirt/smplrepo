@@ -16,6 +16,8 @@ public:
 
     bool init(int type);
 
+    bool run(cl_kernel kernel, uint32_t work_dim, size_t works_count[]);
+
     cl_context context = nullptr;
     cl_platform_id platform = nullptr;
     cl_uint num_platforms = 1;
@@ -54,12 +56,19 @@ bool clMainPrivate::init(int type)
     return ret == 0;
 }
 
+bool clMainPrivate::run(cl_kernel kernel, uint32_t work_dim, size_t works_count[])
+{
+    cl_int ret;
+    ret = clEnqueueNDRangeKernel(command_queue, kernel, work_dim, nullptr, works_count,
+                                     nullptr, 0, nullptr, nullptr);
+    return ret == 0;
+}
+
 /////////////////////
 
 class clProgramPrivate{
 public:
     cl_program program = nullptr;
-    cl_kernel kernel = nullptr;
     cl_context context = nullptr;
 
     struct Mem{
@@ -103,6 +112,7 @@ public:
     typedef std::shared_ptr< Mem > PMem;
 
     std::vector<PMem> m_memobjs;
+    std::vector<cl_kernel> m_kernels;
 
     clProgramPrivate(cl_context context){
         this->context = context;
@@ -110,10 +120,17 @@ public:
 
     ~clProgramPrivate(){
 
-        if(kernel)
+        for(cl_kernel kernel: m_kernels){
             clReleaseKernel(kernel);
+        }
         if(program)
             clReleaseProgram(program);
+    }
+
+    bool build(cl_device_id device_id){
+        cl_int ret;
+        ret = clBuildProgram(program, 1, &device_id, nullptr, nullptr, nullptr);
+        return ret == 0;
     }
 
     bool load(const std::string& source){
@@ -125,10 +142,14 @@ public:
         return ret == 0;
     }
 
-    bool createKernel(const std::string& kern){
+    clKernel createKernel(const std::string& kern){
         cl_int ret;
-        kernel = clCreateKernel(program, kern.c_str(), &ret);
-        return ret == 0;
+        cl_kernel kernel = clCreateKernel(program, kern.c_str(), &ret);
+        m_kernels.push_back(kernel);
+        return m_kernels.size() - 1;
+    }
+    cl_kernel get(clKernel val){
+        return m_kernels[val];
     }
 
     clBuffer createBuffer(size_t size, int type){
@@ -136,18 +157,30 @@ public:
         return (clBuffer)(m_memobjs.size() - 1);
     }
 
-    bool setArg(u_int32_t index, clBuffer buffer){
+    bool setArg(clKernel k, u_int32_t index, clBuffer buffer){
+        cl_int ret;
         PMem mem = m_memobjs[buffer];
-        return 0 == clSetKernelArg(kernel, index, sizeof(cl_mem), mem->memobj);
+        cl_kernel kernel = m_kernels[k];
+        ret = clSetKernelArg(kernel, index, sizeof(cl_mem), &mem->memobj);
+        return ret == 0;
     }
-    bool setArg(u_int32_t index, int value){
-        return 0 == clSetKernelArg(kernel, index, sizeof(int), &value);
+    bool setArg(clKernel k, u_int32_t index, int value){
+        cl_int ret;
+        cl_kernel kernel = m_kernels[k];
+        ret = clSetKernelArg(kernel, index, sizeof(int), &value);
+        return ret == 0;
     }
-    bool setArg(u_int32_t index, float value){
-        return 0 == clSetKernelArg(kernel, index, sizeof(float), &value);
+    bool setArg(clKernel k, u_int32_t index, float value){
+        cl_int ret;
+        cl_kernel kernel = m_kernels[k];
+        ret = clSetKernelArg(kernel, index, sizeof(float), &value);
+        return ret == 0;
     }
-    bool setArg(u_int32_t index, double value){
-        return 0 == clSetKernelArg(kernel, index, sizeof(double), &value);
+    bool setArg(clKernel k, u_int32_t index, double value){
+        cl_int ret;
+        cl_kernel kernel = m_kernels[k];
+        ret = clSetKernelArg(kernel, index, sizeof(double), &value);
+        return ret == 0;
     }
 
     bool write(cl_command_queue command_queue, clBuffer buffer, const bytevector &data){
@@ -172,6 +205,25 @@ public:
         return ret == 0;
     }
 
+    bool write(cl_command_queue command_queue, clBuffer buffer, void *data){
+        cl_int ret;
+
+        PMem mem = m_memobjs[buffer];
+
+        ret = clEnqueueWriteBuffer(command_queue, mem->memobj, CL_TRUE, 0, mem->size,
+                                   data, 0, nullptr, nullptr);
+        return ret == 0;
+    }
+
+    bool read(cl_command_queue command_queue, clBuffer buffer, void *data){
+        cl_int ret;
+
+        PMem mem = m_memobjs[buffer];
+
+        ret = clEnqueueReadBuffer(command_queue, mem->memobj, CL_TRUE, 0, mem->size,
+                                   data, 0, nullptr, nullptr);
+        return ret == 0;
+    }
 };
 
 }/** end namespace */
@@ -195,6 +247,18 @@ bool clMainObject::init(int type)
     return m_priv->init(type);
 }
 
+bool clMainObject::run(clKernel kernel, const _clProgram &program, uint32_t work_dim, size_t works_count[])
+{
+
+    return m_priv->run(program->m_priv->get(kernel), work_dim, works_count);
+}
+
+bool clMainObject::run(clKernel kernel, const _clProgram &program, size_t works_count)
+{
+    size_t wc[] = {works_count};
+    return m_priv->run(program->m_priv->get(kernel), 1, wc);
+}
+
 std::shared_ptr<clProgram> clMainObject::getProgram(const std::string source)
 {
     std::shared_ptr<clProgram> prog;
@@ -203,6 +267,11 @@ std::shared_ptr<clProgram> clMainObject::getProgram(const std::string source)
     prog->m_priv->load(source);
 
     return prog;
+}
+
+bool clMainObject::buildProgram(_clProgram prog)
+{
+    return prog->m_priv->build(m_priv->device_id);
 }
 
 clMainObject &clMainObject::instance()
@@ -222,7 +291,7 @@ clProgram::~clProgram()
     delete m_priv;
 }
 
-bool clProgram::createKernel(const std::string &kern)
+clKernel clProgram::createKernel(const std::string &kern)
 {
     return m_priv->createKernel(kern);
 }
@@ -244,22 +313,35 @@ bool clProgram::read(clBuffer buffer, bytevector &data)
     return m_priv->read(cq, buffer, data);
 }
 
-bool clProgram::setArg(u_int32_t index, clBuffer buffer)
+bool clProgram::write(clBuffer buffer, void *data)
 {
-    return m_priv->setArg(index, buffer);
+    cl_command_queue cq = clMainObject::instance().m_priv->command_queue;
+    return m_priv->write(cq, buffer, data);
+
 }
 
-bool clProgram::setArg(u_int32_t index, int value)
+bool clProgram::read(clBuffer buffer, void *data)
 {
-    return m_priv->setArg(index, value);
+    cl_command_queue cq = clMainObject::instance().m_priv->command_queue;
+    return m_priv->read(cq, buffer, data);
 }
 
-bool clProgram::setArg(u_int32_t index, float value)
+bool clProgram::setArg(clKernel kernel, u_int32_t index, clBuffer buffer)
 {
-    return m_priv->setArg(index, value);
+    return m_priv->setArg(kernel, index, buffer);
 }
 
-bool clProgram::setArg(u_int32_t index, double value)
+bool clProgram::setArg(clKernel kernel, u_int32_t index, int value)
 {
-    return m_priv->setArg(index, value);
+    return m_priv->setArg(kernel, index, value);
+}
+
+bool clProgram::setArg(clKernel kernel, u_int32_t index, float value)
+{
+    return m_priv->setArg(kernel, index, value);
+}
+
+bool clProgram::setArg(clKernel kernel, u_int32_t index, double value)
+{
+    return m_priv->setArg(kernel, index, value);
 }

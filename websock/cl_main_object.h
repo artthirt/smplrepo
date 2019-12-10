@@ -17,6 +17,7 @@ class clProgramPrivate;
 typedef long long clContext;
 
 typedef unsigned long clBuffer;
+typedef unsigned long clKernel;
 
 class clProgram{
 public:
@@ -26,7 +27,7 @@ public:
     clProgram(clContext context);
     ~clProgram();
 
-    bool createKernel(const std::string& kern);
+    clKernel createKernel(const std::string& kern);
     /**
      * @brief createBuffer
      * @param size
@@ -37,16 +38,21 @@ public:
     bool write(clBuffer buffer, const bytevector& data);
     bool read(clBuffer buffer, bytevector& data);
 
-    bool setArg(u_int32_t index, clBuffer buffer);
-    bool setArg(u_int32_t index, int value);
-    bool setArg(u_int32_t index, float value);
-    bool setArg(u_int32_t index, double value);
+    bool write(clBuffer buffer, void *data);
+    bool read(clBuffer buffer, void *data);
+
+    bool setArg(clKernel kernel, u_int32_t index, clBuffer buffer);
+    bool setArg(clKernel kernel, u_int32_t index, int value);
+    bool setArg(clKernel kernel, u_int32_t index, float value);
+    bool setArg(clKernel kernel, u_int32_t index, double value);
 
     friend class clMainObject;
 
 private:
     clProgramPrivate* m_priv;
 };
+
+typedef std::shared_ptr<clProgram> _clProgram;
 
 class clMainObject
 {
@@ -58,9 +64,14 @@ public:
     clMainObject();
     ~clMainObject();
 
-    bool init(int type);
+    bool init(int type = GPU);
+
+    bool run(clKernel kernel, const _clProgram& program, uint32_t work_dim, size_t works_count[]);
+    bool run(clKernel kernel, const _clProgram& program, size_t works_count);
 
     std::shared_ptr<clProgram> getProgram(const std::string source);
+
+    bool buildProgram(_clProgram prog);
 
     friend class clProgram;
 

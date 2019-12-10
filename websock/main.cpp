@@ -17,7 +17,7 @@ public:
     ConvertImage(){
         cl_::clMainObject::instance().init();
 
-        m_progname = ":/convert.cl";
+        m_progname = ":/cl/convert.cl";
 
         QString str;
         QFile f(QString::fromStdString(m_progname));
@@ -28,7 +28,7 @@ public:
 
 
         m_program = cl_::clMainObject::instance().getProgram(str.toStdString());
-        cl_::clMainObject::instance().buildProgram(m_program);
+        bool res = cl_::clMainObject::instance().buildProgram(m_program);
 
         m_kernel = m_program->createKernel("convert");
 

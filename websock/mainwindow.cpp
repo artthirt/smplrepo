@@ -36,10 +36,10 @@ MainWindow::MainWindow(QWidget *parent)
 
 	ConvertImage clImage;
 
-//	Image im;
-//	loadImage("test.image", &im);
-//	QImage im2 = clImage.createImage(&im);
-//	ui->widgetFrame->onReceiveImage(im2);
+	Image im;
+	loadImage("test.image", &im);
+	QImage im2 = clImage.createImage(&im);
+	ui->widgetFrame->onReceiveImage(im2);
 }
 
 MainWindow::~MainWindow()

@@ -40,7 +40,7 @@ __kernel void convert(__global uchar* Y, __global uchar* U, __global uchar *V,
 
     _rgb = getRgb((float3)(_y, _u, _v));
 
-    Rgb[lsRgb * y + x * 4 + 2] = _rgb.x;
-    Rgb[lsRgb * y + x * 4 + 1] = _rgb.y;
-    Rgb[lsRgb * y + x * 4 + 0] = _rgb.z;
+    Rgb[lsRgb * y + x * 3 + 2] = _rgb.x;
+    Rgb[lsRgb * y + x * 3 + 1] = _rgb.y;
+    Rgb[lsRgb * y + x * 3 + 0] = _rgb.z;
 }

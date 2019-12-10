@@ -424,7 +424,7 @@ bool WebSock::parseH264(AVFrame *picture)
 
 void WebSock::createImage(AVFrame *picture)
 {
-#if 0
+#ifdef USE_OPENCL
 	QImage image = m_convertImage.createImage(picture);
 #else
 
@@ -643,19 +643,20 @@ ConvertImage::ConvertImage(){
 
 }
 
-QImage ConvertImage::createImage(IMAGE *picture){
+QImage ConvertImage::createImage(IMAGE *picture)
+{
 	if(picture->width != m_image.width || picture->height != m_image.height){
 		m_program->freeBuffers();
 		m_image.width = picture->width;
 		m_image.height = picture->height;
 
-		m_output = QImage(picture->width, picture->height, QImage::Format_ARGB32);
+		m_output = QImage(picture->width, picture->height, QImage::Format_RGB888);
 
 		size_t Ysize = picture->linesize[0] * picture->height;
 		size_t Usize = picture->linesize[1] * picture->height;
 		size_t Vsize = picture->linesize[2] * picture->height;
 
-		size_t RGBsize = picture->width * picture->height * 4;
+		size_t RGBsize = picture->width * picture->height * 3;
 
 		m_Y = m_program->createBuffer(Ysize, cl_::clProgram::WRITE);
 		m_U = m_program->createBuffer(Usize, cl_::clProgram::WRITE);
@@ -674,18 +675,56 @@ QImage ConvertImage::createImage(IMAGE *picture){
 	m_program->setArg(m_kernel, 4, picture->linesize[0]);
 	m_program->setArg(m_kernel, 5, picture->linesize[1]);
 	m_program->setArg(m_kernel, 6, picture->linesize[2]);
-	m_program->setArg(m_kernel, 7, picture->width * 4);
+	m_program->setArg(m_kernel, 7, picture->width * 3);
 	m_program->setArg(m_kernel, 8, picture->width);
 	m_program->setArg(m_kernel, 9, picture->height);
 
 	bool res = cl_::clMainObject::instance().run(m_kernel, m_program, picture->width * picture->height);
 
-	std::vector<uchar> bits;
-	bits.resize(picture->width * picture->height * 4);
+	res = m_program->read(m_Rgb, m_output.bits());
 
-	res = m_program->read(m_Rgb, bits.data());
+	return m_output;
+}
 
-	std::copy(bits.data(), bits.data() + bits.size(), m_output.bits());
+QImage ConvertImage::createImage(Image *picture)
+{
+	if(picture->width != m_image.width || picture->height != m_image.height){
+		m_program->freeBuffers();
+		m_image.width = picture->width;
+		m_image.height = picture->height;
+
+		m_output = QImage(picture->width, picture->height, QImage::Format_RGB888);
+
+		size_t Ysize = picture->linesize[0] * picture->height;
+		size_t Usize = picture->linesize[1] * picture->height;
+		size_t Vsize = picture->linesize[2] * picture->height;
+
+		size_t RGBsize = picture->width * picture->height * 3;
+
+		m_Y = m_program->createBuffer(Ysize, cl_::clProgram::WRITE);
+		m_U = m_program->createBuffer(Usize, cl_::clProgram::WRITE);
+		m_V = m_program->createBuffer(Vsize, cl_::clProgram::WRITE);
+		m_Rgb = m_program->createBuffer(RGBsize, cl_::clProgram::READ);
+	}
+
+	m_program->write(m_Y, picture->data[0].data());
+	m_program->write(m_U, picture->data[1].data());
+	m_program->write(m_V, picture->data[2].data());
+
+	m_program->setArg(m_kernel, 0, m_Y);
+	m_program->setArg(m_kernel, 1, m_U);
+	m_program->setArg(m_kernel, 2, m_V);
+	m_program->setArg(m_kernel, 3, m_Rgb);
+	m_program->setArg(m_kernel, 4, picture->linesize[0]);
+	m_program->setArg(m_kernel, 5, picture->linesize[1]);
+	m_program->setArg(m_kernel, 6, picture->linesize[2]);
+	m_program->setArg(m_kernel, 7, picture->width * 3);
+	m_program->setArg(m_kernel, 8, picture->width);
+	m_program->setArg(m_kernel, 9, picture->height);
+
+	bool res = cl_::clMainObject::instance().run(m_kernel, m_program, picture->width * picture->height);
+
+	res = m_program->read(m_Rgb, m_output.bits());
 
 	return m_output;
 }

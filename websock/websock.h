@@ -40,7 +40,8 @@ class ConvertImage{
 public:
 	ConvertImage();
 
-	QImage createImage(IMAGE *picture);
+	QImage createImage(AVFrame *picture);
+	QImage createImage(Image *picture);
 
 private:
 	cl_::_clProgram m_program;

@@ -29,6 +29,8 @@ public:
 
         m_program = cl_::clMainObject::instance().getProgram(str.toStdString());
         bool res = cl_::clMainObject::instance().buildProgram(m_program);
+        std::string s = m_program->getBuildInfoString();
+        printf("%s\n", s.c_str());
 
         m_kernel = m_program->createKernel("convert");
 

@@ -37,6 +37,8 @@ public:
 
     void freeBuffers();
 
+    std::string getBuildInfoString() const;
+
     bool write(clBuffer buffer, const bytevector& data);
     bool read(clBuffer buffer, bytevector& data);
 

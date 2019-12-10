@@ -122,6 +122,8 @@ public:
     std::vector<PMem> m_memobjs;
     std::vector<cl_kernel> m_kernels;
 
+    std::string buildInfoString;
+
     clProgramPrivate(cl_context context){
         this->context = context;
     }
@@ -138,6 +140,19 @@ public:
     bool build(cl_device_id device_id){
         cl_int ret;
         ret = clBuildProgram(program, 1, &device_id, nullptr, nullptr, nullptr);
+
+        size_t log_size = 0;
+
+        if(ret != 0){
+            clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, 0, nullptr, &log_size);
+
+            std::vector<char> data;
+            data.resize(log_size + 1);
+            data[data.size() - 1] = 0;
+            clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, log_size, data.data(), nullptr);
+            buildInfoString = data.data();
+        }
+
         return ret == 0;
     }
 
@@ -316,6 +331,11 @@ clBuffer clProgram::createBuffer(size_t size, int type)
 void clProgram::freeBuffers()
 {
     m_priv->freeBuffers();
+}
+
+std::string clProgram::getBuildInfoString() const
+{
+    return m_priv->buildInfoString;
 }
 
 bool clProgram::write(clBuffer buffer, const bytevector &data)

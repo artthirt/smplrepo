@@ -150,7 +150,8 @@ public:
             data.resize(log_size + 1);
             data[data.size() - 1] = 0;
             clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, log_size, data.data(), nullptr);
-            buildInfoString = data.data();
+			std::string tmp = data.data();
+			buildInfoString = tmp;
         }
 
         return ret == 0;

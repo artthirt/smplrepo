@@ -7,35 +7,40 @@ float clip(float v)
     return v;
 }
 
-void getRgb(float Y, float U, float V, float &R, float &G, float &B)
+float3 getRgb(float3 yuv)
 {
-    R = Y + 1.13983 * V;
-    G = Y - 0.39465 * U - 0.58060 * V;
-    B = Y + 2.03211 * U;
+    float3 vec;
 
-    R = clip(R); 
-    G = clip(G); 
-    B = clip(B); 
+    vec.x = yuv.x + 1.402 * (yuv.z - 128);
+    vec.y = yuv.x - 0.344 * (yuv.y - 128) - 0.714 * (yuv.z - 128);
+    vec.z = yuv.x + 1.772 * (yuv.y - 128);
+
+    vec.x = clip(vec.x);
+    vec.y = clip(vec.y);
+    vec.z = clip(vec.z);
+    return vec;
 }
 
-__kernel void convert(__global uchar8* Y, __global uchar8* U, __global uchar8 *V,
-                    __global uchar8* Rgb, int lsY, int lsU, int lsV, int lsRgb,
+__kernel void convert(__global uchar* Y, __global uchar* U, __global uchar *V,
+                    __global uchar* Rgb, int lsY, int lsU, int lsV, int lsRgb,
                      int width, int height)
 {
     int gid = get_global_id(0);
     int x = gid % width;
     int y = gid / width;
 
-    float y = Y[lsY * y + x];
-    float u = U[lsU * y + x/2];
-    float v = V[lsV * y + x/2];
+    int y2 = (int)(y/2.);
+    int x2 = (int)(x/2.);
 
-    float r, g, b;
+    int _y = Y[lsY * y + x];
+    int _u = U[lsU * y2 + x2];
+    int _v = V[lsV * y2 + x2];
 
-    getRgb(y, u, v, r, g, b);
+    float3 _rgb;
 
-    uchar8 *rgb = &Rgb[lsRgb * y + x * 4];
-    rgb[0] = r;
-    rgb[1] = g;
-    rgb[2] = b;
+    _rgb = getRgb((float3)(_y, _u, _v));
+
+    Rgb[lsRgb * y + x * 4 + 2] = _rgb.x;
+    Rgb[lsRgb * y + x * 4 + 1] = _rgb.y;
+    Rgb[lsRgb * y + x * 4 + 0] = _rgb.z;
 }

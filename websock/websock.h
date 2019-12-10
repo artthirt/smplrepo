@@ -19,6 +19,45 @@ extern "C"{
 
 #include "videodata.h"
 
+struct Image{
+	int width   = 0;
+	int height  = 0;
+	int linesize[8];
+	std::vector< uint8_t > data[8];
+
+	bool empty() const{
+		return width == 0 || height == 0 || data[0].empty() || data[1].empty() || data[2].empty();
+	}
+};
+
+#ifdef USE_OPENCL
+
+#include "cl_main_object.h"
+
+#define IMAGE	AVFrame
+
+class ConvertImage{
+public:
+	ConvertImage();
+
+	QImage createImage(IMAGE *picture);
+
+private:
+	cl_::_clProgram m_program;
+	cl_::clKernel m_kernel;
+	cl_::clBuffer m_Y;
+	cl_::clBuffer m_U;
+	cl_::clBuffer m_V;
+	cl_::clBuffer m_Rgb;
+
+	Image m_image;
+	QImage m_output;
+
+	std::string m_progname;
+};
+
+#endif
+
 class WebSock : public QThread
 {
 	Q_OBJECT
@@ -85,7 +124,10 @@ private:
     AVFrame m_frame;
 	bool m_done				= false;
 	uint m_numpack			= 0;
-    bool m_is_update_frame  = false;;
+
+#ifdef USE_OPENCL
+	ConvertImage m_convertImage;
+#endif
 
 	void initH264();
     void doGetDecodedFrame();
@@ -98,17 +140,6 @@ private:
     // QObject interface
 public:
     bool event(QEvent *ev);
-};
-
-struct Image{
-    int width   = 0;
-    int height  = 0;
-    int linesize[8];
-    std::vector< uint8_t > data[8];
-
-    bool empty() const{
-        return width == 0 || height == 0 || data[0].empty() || data[1].empty() || data[2].empty();
-    }
 };
 
 /**
@@ -133,5 +164,6 @@ void loadImage(const QString& fileName, Image *picture);
  */
 QImage createImage(const Image *picture);
 
+//////////////////////////////////////
 
 #endif // WEBSOCK_H

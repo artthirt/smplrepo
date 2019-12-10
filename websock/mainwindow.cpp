@@ -33,6 +33,13 @@ MainWindow::MainWindow(QWidget *parent)
 
 	connect(&m_timer, SIGNAL(timeout()), this, SLOT(onTimeout()));
 	m_timer.start(500);
+
+	ConvertImage clImage;
+
+//	Image im;
+//	loadImage("test.image", &im);
+//	QImage im2 = clImage.createImage(&im);
+//	ui->widgetFrame->onReceiveImage(im2);
 }
 
 MainWindow::~MainWindow()

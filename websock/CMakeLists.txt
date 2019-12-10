@@ -7,6 +7,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
 set(HAVE_MMX ON)
+set(HAVE_OPENCL ON)
 
 if(CMAKE_VERSION VERSION_LESS "3.7.0")
     set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -33,7 +34,17 @@ if(HAVE_MMX)
     add_definitions(-DUSE_MMX)
 endif()
 
+if(HAVE_OPENCL)
+    find_package(OpenCL)
+    if(OpenCL_FOUND)
+        set(LIBS ${LIBS} ${OpenCL_LIBRARIES})
+        add_definitions(-DUSE_OPENCL)
+        set(SOURCES ${SOURCES} cl_main_object.cpp)
+    endif()
+endif()
+
 add_executable(websock main.cpp
+        ${SOURCES}
 	websock.cpp
 	mainwindow.cpp
 	mainwindow.ui
@@ -62,7 +73,7 @@ find_library(AVCODEC avcodec HINTS      ${DEFAULT_FFMPEGDIR})
 find_library(AVFORMAT avformat HINTS    ${DEFAULT_FFMPEGDIR})
 find_library(AVUTIL avutil HINTS        ${DEFAULT_FFMPEGDIR})
 
-set(LIBS Qt5::Core Qt5::Widgets Qt5::Network Qt5::OpenGL
+set(LIBS ${LIBS} Qt5::Core Qt5::Widgets Qt5::Network Qt5::OpenGL
     ${AVCODEC} ${AVFORMAT} ${AVUTIL})
 
 if(WIN32)

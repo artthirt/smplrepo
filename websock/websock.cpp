@@ -566,7 +566,11 @@ void saveImage(AVFrame* picture, const QString& fileName)
 
 void loadImage(const QString &fileName, Image *picture)
 {
+    if(!QFile::exists(fileName))
+        return;
+
     QFile f(fileName);
+
     f.open(QIODevice::ReadOnly);
 
     f.read((char*)&picture->width, sizeof(int));
@@ -586,6 +590,9 @@ void loadImage(const QString &fileName, Image *picture)
 
 QImage createImage(const Image *picture)
 {
+    if(!picture || picture->empty())
+        return QImage();
+
     QImage image(picture->width, picture->height, QImage::Format_ARGB32);
 
     int numthr = omp_get_num_procs();

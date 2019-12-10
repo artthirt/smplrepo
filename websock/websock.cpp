@@ -653,8 +653,8 @@ QImage ConvertImage::createImage(IMAGE *picture)
 		m_output = QImage(picture->width, picture->height, QImage::Format_RGB888);
 
 		size_t Ysize = picture->linesize[0] * picture->height;
-		size_t Usize = picture->linesize[1] * picture->height;
-		size_t Vsize = picture->linesize[2] * picture->height;
+		size_t Usize = picture->linesize[1] * picture->height/2;
+		size_t Vsize = picture->linesize[2] * picture->height/2;
 
 		size_t RGBsize = picture->width * picture->height * 3;
 
@@ -696,8 +696,8 @@ QImage ConvertImage::createImage(Image *picture)
 		m_output = QImage(picture->width, picture->height, QImage::Format_RGB888);
 
 		size_t Ysize = picture->linesize[0] * picture->height;
-		size_t Usize = picture->linesize[1] * picture->height;
-		size_t Vsize = picture->linesize[2] * picture->height;
+		size_t Usize = picture->linesize[1] * picture->height/2;
+		size_t Vsize = picture->linesize[2] * picture->height/2;
 
 		size_t RGBsize = picture->width * picture->height * 3;
 

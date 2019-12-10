@@ -21,6 +21,8 @@ typedef unsigned long clBuffer;
 class clProgram{
 public:
 
+    enum {READ, WRITE, READWRITE};
+
     clProgram(clContext context);
     ~clProgram();
 
@@ -30,7 +32,7 @@ public:
      * @param size
      * @return index of buffer
      */
-    clBuffer createBuffer(size_t size);
+    clBuffer createBuffer(size_t size, int type = READWRITE);
 
     bool write(clBuffer buffer, const bytevector& data);
     bool read(clBuffer buffer, bytevector& data);

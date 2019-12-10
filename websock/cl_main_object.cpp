@@ -67,8 +67,8 @@ public:
         size_t size = 0;
 
         Mem(){}
-        Mem(cl_context context, size_t size){
-            create(context, size);
+        Mem(cl_context context, size_t size, int type){
+            create(context, size, type);
         }
 
         ~Mem(){
@@ -77,10 +77,25 @@ public:
             }
         }
 
-        bool create(cl_context context, size_t len){
+        bool create(cl_context context, size_t len, int type){
             size = len;
             cl_int ret;
-            memobj = clCreateBuffer(context, CL_MEM_READ_WRITE, len, nullptr, &ret);
+
+            cl_map_flags flags = CL_MEM_READ_WRITE;
+
+            switch (type) {
+            case clProgram::READ:
+                flags = CL_MEM_READ_ONLY;
+            break;
+            case clProgram::WRITE:
+                flags = CL_MEM_WRITE_ONLY;
+            break;
+            case clProgram::READWRITE:
+                flags = CL_MEM_READ_WRITE;
+            break;
+            }
+
+            memobj = clCreateBuffer(context, flags, len, nullptr, &ret);
             return ret == 0;
         }
     };
@@ -116,8 +131,8 @@ public:
         return ret == 0;
     }
 
-    clBuffer createBuffer(size_t size){
-        m_memobjs.push_back(std::make_shared<Mem>(context, size));
+    clBuffer createBuffer(size_t size, int type){
+        m_memobjs.push_back(std::make_shared<Mem>(context, size, type));
         return (clBuffer)(m_memobjs.size() - 1);
     }
 
@@ -212,9 +227,9 @@ bool clProgram::createKernel(const std::string &kern)
     return m_priv->createKernel(kern);
 }
 
-clBuffer clProgram::createBuffer(size_t size)
+clBuffer clProgram::createBuffer(size_t size, int type)
 {
-    return m_priv->createBuffer(size);
+    return m_priv->createBuffer(size, type);
 }
 
 bool clProgram::write(clBuffer buffer, const bytevector &data)

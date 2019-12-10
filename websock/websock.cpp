@@ -658,9 +658,9 @@ QImage ConvertImage::createImage(IMAGE *picture)
 
 		size_t RGBsize = picture->width * picture->height * 3;
 
-		m_Y = m_program->createBuffer(Ysize, cl_::clProgram::WRITE);
-		m_U = m_program->createBuffer(Usize, cl_::clProgram::WRITE);
-		m_V = m_program->createBuffer(Vsize, cl_::clProgram::WRITE);
+		m_Y = m_program->createBuffer(Ysize, cl_::clProgram::READWRITE);
+		m_U = m_program->createBuffer(Usize, cl_::clProgram::READWRITE);
+		m_V = m_program->createBuffer(Vsize, cl_::clProgram::READWRITE);
 		m_Rgb = m_program->createBuffer(RGBsize, cl_::clProgram::READ);
 	}
 

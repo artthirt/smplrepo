@@ -69,6 +69,8 @@ bool clMainPrivate::run(cl_kernel kernel, uint32_t work_dim, size_t works_count[
     cl_int ret;
     ret = clEnqueueNDRangeKernel(command_queue, kernel, work_dim, nullptr, works_count,
                                      nullptr, 0, nullptr, nullptr);
+
+	clFlush(command_queue);
     return ret == 0;
 }
 

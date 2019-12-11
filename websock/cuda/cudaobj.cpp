@@ -117,12 +117,15 @@ QImage ConvertImageCu::createImage(AVFrame *picture)
 
 	int lsRgb = m_output.width() * 3;
 
+	cudaStreamQuery(0);
 	convert_yuv((const uint8_t*)m_Y.mem(), picture->linesize[0],
 			(const uint8_t*)m_U.mem(), picture->linesize[1],
 			(const uint8_t*)m_V.mem(), picture->linesize[2],
 			(uint8_t*)m_Rgb.mem(), lsRgb, picture->width, picture->height);
+	cudaStreamQuery(0);
 
 	m_Rgb.copyFrom(m_output.bits());
+	cudaStreamQuery(0);
 
 	return m_output;
 }

@@ -44,6 +44,10 @@ private:
 	float m_fps;
 	uint m_counter_fps;
 
+	int m_prev_width	= 0;
+	int m_prev_height	= 0;
+	int m_prev_type		= 0;
+
 	bool m_rotateBy90;
 
     uint m_bindTex;

@@ -122,7 +122,17 @@ void VideoFrame::generateTexture()
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, t, m_image.width(), m_image.height(), 0, t, GL_UNSIGNED_BYTE, m_image.bits());
+
+	if(m_prev_width != m_image.width() || m_prev_height != m_image.height() || m_prev_type != t){
+		m_prev_type = t;
+		m_prev_width = m_image.width();
+		m_prev_height = m_image.height();
+		glTexImage2D(GL_TEXTURE_2D, 0, t, m_image.width(), m_image.height(),
+					 0, t, GL_UNSIGNED_BYTE, m_image.bits());
+	}else{
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_image.width(), m_image.height(),
+						t, GL_UNSIGNED_BYTE, m_image.bits());
+	}
 }
 
 inline void qmat2float(const QMatrix4x4& mat, float* data, int len = 16)

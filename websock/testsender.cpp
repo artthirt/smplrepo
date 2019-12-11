@@ -96,10 +96,10 @@ void TestSender::onTimeout()
     }
     QByteArray data = m_file.read(size);
 
-	QFile f("test.h264");
-	f.open(QIODevice::WriteOnly | QIODevice::Append);
-	f.write(data);
-	f.close();
+//	QFile f("test.h264");
+//	f.open(QIODevice::WriteOnly | QIODevice::Append);
+//	f.write(data);
+//	f.close();
 
     if(m_file.atEnd())
         m_file.close();

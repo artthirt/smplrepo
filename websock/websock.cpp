@@ -620,6 +620,8 @@ QImage createImage(const Image *picture)
 
 //////////////////////////////////
 
+#ifdef USE_OPENCL
+
 ConvertImage::ConvertImage(){
 	cl_::clMainObject::instance().init();
 
@@ -728,3 +730,5 @@ QImage ConvertImage::createImage(Image *picture)
 
 	return m_output;
 }
+
+#endif

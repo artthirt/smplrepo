@@ -1,4 +1,6 @@
-cmake_minimum_required(VERSION 3.4.1)
+cmake_minimum_required(VERSION 3.10)
+
+message(STATUS "cmake version " ${CMAKE_VERSION})
 
 project(websock)
 
@@ -6,11 +8,15 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(HAVE_MMX ON)
-set(HAVE_OPENCL ON)
+option(HAVE_MMX "use mmx instructions" ON)
+option(HAVE_OPENCL "use opencl" ON)
 
 if(CMAKE_VERSION VERSION_LESS "3.7.0")
     set(CMAKE_INCLUDE_CURRENT_DIR ON)
+endif()
+
+if(MSVC)
+	set(HAVE_MMX OFF)
 endif()
 
 find_package(OpenMP)
@@ -66,6 +72,11 @@ if(WIN32)
     set(INCLUDES ${INCLUDES}
         ./ffmpeg/include)
     set(DEFAULT_FFMPEGDIR ${DEFAULT_FFMPEGDIR})
+endif()
+
+if(HAVE_OPENCL)
+	message(STATUS "opencl include dir " ${OpenCL_INCLUDE_DIRS})
+	set(INCLUDES ${INCLUDES} ${OpenCL_INCLUDE_DIRS})
 endif()
 
 include_directories(${INCLUDES})

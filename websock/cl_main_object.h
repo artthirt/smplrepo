@@ -45,10 +45,10 @@ public:
     bool write(clBuffer buffer, void *data);
     bool read(clBuffer buffer, void *data);
 
-    bool setArg(clKernel kernel, u_int32_t index, clBuffer buffer);
-    bool setArg(clKernel kernel, u_int32_t index, int value);
-    bool setArg(clKernel kernel, u_int32_t index, float value);
-    bool setArg(clKernel kernel, u_int32_t index, double value);
+	bool setArg(clKernel kernel, uint32_t index, clBuffer buffer);
+	bool setArg(clKernel kernel, uint32_t index, int value);
+	bool setArg(clKernel kernel, uint32_t index, float value);
+	bool setArg(clKernel kernel, uint32_t index, double value);
 
     friend class clMainObject;
 

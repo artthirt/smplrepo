@@ -115,10 +115,10 @@ inline void conv_yuv_to_rgb(uchar Y0, uchar Y1, int U, int V, QRgb &rgb0, QRgb &
     mRGB0 = _mm_cvtsi64x_si64(RGB0.ll);
     mRGB1 = _mm_cvtsi64x_si64(RGB1.ll);
 
-    r1 = _m_packuswb(mRGB0, t1);
+	r1 = _m_packuswb(mRGB0, t1);
     r2 = _m_packuswb(mRGB1, t1);
 
-    rgb0 = (QRgb)_m_to_int(r1);
+	rgb0 = (QRgb)_m_to_int(r1);
     rgb1 = (QRgb)_m_to_int(r2);
     //rgb0 = qRgb(RGB0[0], RGB0[1], RGB0[2]);
     //rgb1 = qRgb(RGB1[0], RGB1[1], RGB1[2]);

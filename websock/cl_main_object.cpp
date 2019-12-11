@@ -187,26 +187,26 @@ public:
         m_memobjs.clear();
     }
 
-    bool setArg(clKernel k, u_int32_t index, clBuffer buffer){
+	bool setArg(clKernel k, uint32_t index, clBuffer buffer){
         cl_int ret;
         PMem mem = m_memobjs[buffer];
         cl_kernel kernel = m_kernels[k];
         ret = clSetKernelArg(kernel, index, sizeof(cl_mem), &mem->memobj);
         return ret == 0;
     }
-    bool setArg(clKernel k, u_int32_t index, int value){
+	bool setArg(clKernel k, uint32_t index, int value){
         cl_int ret;
         cl_kernel kernel = m_kernels[k];
         ret = clSetKernelArg(kernel, index, sizeof(int), &value);
         return ret == 0;
     }
-    bool setArg(clKernel k, u_int32_t index, float value){
+	bool setArg(clKernel k, uint32_t index, float value){
         cl_int ret;
         cl_kernel kernel = m_kernels[k];
         ret = clSetKernelArg(kernel, index, sizeof(float), &value);
         return ret == 0;
     }
-    bool setArg(clKernel k, u_int32_t index, double value){
+	bool setArg(clKernel k, uint32_t index, double value){
         cl_int ret;
         cl_kernel kernel = m_kernels[k];
         ret = clSetKernelArg(kernel, index, sizeof(double), &value);
@@ -366,22 +366,22 @@ bool clProgram::read(clBuffer buffer, void *data)
     return m_priv->read(cq, buffer, data);
 }
 
-bool clProgram::setArg(clKernel kernel, u_int32_t index, clBuffer buffer)
+bool clProgram::setArg(clKernel kernel, uint32_t index, clBuffer buffer)
 {
     return m_priv->setArg(kernel, index, buffer);
 }
 
-bool clProgram::setArg(clKernel kernel, u_int32_t index, int value)
+bool clProgram::setArg(clKernel kernel, uint32_t index, int value)
 {
     return m_priv->setArg(kernel, index, value);
 }
 
-bool clProgram::setArg(clKernel kernel, u_int32_t index, float value)
+bool clProgram::setArg(clKernel kernel, uint32_t index, float value)
 {
     return m_priv->setArg(kernel, index, value);
 }
 
-bool clProgram::setArg(clKernel kernel, u_int32_t index, double value)
+bool clProgram::setArg(clKernel kernel, uint32_t index, double value)
 {
     return m_priv->setArg(kernel, index, value);
 }

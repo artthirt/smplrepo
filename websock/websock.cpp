@@ -14,6 +14,10 @@
 #include <sys/socket.h>
 #endif
 
+#ifdef USE_CUDA
+#include "convert_cuda.h"
+#endif
+
 #include <omp.h>
 
 #include "common.h"
@@ -174,7 +178,7 @@ WebSock::WebSock(QObject *parent) : QThread(parent)
 	initH264();
 
     m_decodeThread.reset(new std::thread(std::bind(&WebSock::doSendPktToCodec, this)));
-    //m_decodeThread2.reset(new std::thread(std::bind(&WebSock::doGetDecodedFrame, this)));
+	//m_decodeThread2.reset(new std::thread(std::bind(&WebSock::doGetDecodedFrame, this)));
 }
 
 WebSock::~WebSock()
@@ -343,7 +347,7 @@ void WebSock::doGetDecodedFrame()
 void WebSock::doSendPktToCodec()
 {
 	while(!m_done){
-        decodeH264();
+		decodeH264();
 
         if(!m_framesH264.empty()){
 			//m_mutexh.lock();
@@ -424,8 +428,14 @@ bool WebSock::parseH264(AVFrame *picture)
 
 void WebSock::createImage(AVFrame *picture)
 {
-#ifdef USE_OPENCL
+#ifdef USE_CUDA
+
+	QImage image = m_convertImageCu.createImage(picture);
+
+#elif USE_OPENCL
+
 	QImage image = m_convertImage.createImage(picture);
+
 #else
 
 	QImage image(picture->width, picture->height, QImage::Format_ARGB32);
@@ -732,3 +742,4 @@ QImage ConvertImage::createImage(Image *picture)
 }
 
 #endif
+

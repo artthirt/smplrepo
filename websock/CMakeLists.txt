@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 message(STATUS "cmake version " ${CMAKE_VERSION})
 
-project(websock)
+project(websock LANGUAGES CXX CUDA)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -10,10 +10,14 @@ set(CMAKE_AUTOUIC ON)
 
 option(HAVE_MMX "use mmx instructions" ON)
 option(HAVE_OPENCL "use opencl" ON)
+option(HAVE_CUDA "use cuda" ON)
 
 if(CMAKE_VERSION VERSION_LESS "3.7.0")
     set(CMAKE_INCLUDE_CURRENT_DIR ON)
 endif()
+
+set(INCLUDES ./
+	./include/)
 
 if(MSVC)
 	set(HAVE_MMX OFF)
@@ -40,13 +44,33 @@ if(HAVE_MMX)
     add_definitions(-DUSE_MMX)
 endif()
 
+set(SOURCES)
+
 if(HAVE_OPENCL)
     find_package(OpenCL)
     if(OpenCL_FOUND)
         set(LIBS ${LIBS} ${OpenCL_LIBRARIES})
         add_definitions(-DUSE_OPENCL)
         set(SOURCES ${SOURCES} cl_main_object.cpp)
+		set(CMAKE_CUDA_FLAGS ${CMAKE_CUDA_FLAGS} "-arch=sm_30")
     endif()
+endif()
+
+if(HAVE_CUDA)
+	find_package(CUDA)
+	if(CUDA_FOUND)
+		add_definitions(-DUSE_CUDA)
+		set(INCLUDES ${INCLUDES} cuda/)
+
+		add_library(convert STATIC cuda/convert.cu)
+		#CUDA_ADD_LIBRARY(convert.cuobj cuda/convert.cu )
+
+		set(LIBS ${LIBS} convert ${CUDA_LIBRARIES})
+
+		message(STATUS "cuda library " ${CUDA_LIBRARIES})
+
+		set(SOURCES ${SOURCES} cuda/convert.cu cuda/cudaobj.cpp)
+	endif()
 endif()
 
 add_executable(websock main.cpp
@@ -63,8 +87,10 @@ add_executable(websock main.cpp
         dialogsetfilename.ui
         resource.qrc)
 
-set(INCLUDES ./
-    ./include/)
+if(HAVE_CUDA)
+	set_property(TARGET websock
+		         PROPERTY CUDA_SEPARABLE_COMPILATION ON)
+endif()
 
 set(DEFAULT_FFMPEGDIR ./)
 

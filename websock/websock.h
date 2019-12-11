@@ -30,6 +30,10 @@ struct Image{
 	}
 };
 
+#ifdef USE_CUDA
+#include "cudaobj.h"
+#endif
+
 #ifdef USE_OPENCL
 
 #include "cl_main_object.h"
@@ -125,6 +129,10 @@ private:
     AVFrame m_frame;
 	bool m_done				= false;
 	uint m_numpack			= 0;
+
+#ifdef USE_CUDA
+	ConvertImageCu m_convertImageCu;
+#endif
 
 #ifdef USE_OPENCL
 	ConvertImage m_convertImage;

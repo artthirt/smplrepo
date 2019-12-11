@@ -3,7 +3,7 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 
-#define BLOCKSIZE	32
+#define BLOCKSIZE	16
 
 namespace internal{
 

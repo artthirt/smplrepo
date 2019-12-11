@@ -52,25 +52,29 @@ if(HAVE_OPENCL)
         set(LIBS ${LIBS} ${OpenCL_LIBRARIES})
         add_definitions(-DUSE_OPENCL)
         set(SOURCES ${SOURCES} cl_main_object.cpp)
-		set(CMAKE_CUDA_FLAGS ${CMAKE_CUDA_FLAGS} "-arch=sm_30")
     endif()
 endif()
 
 if(HAVE_CUDA)
-	find_package(CUDA)
-	if(CUDA_FOUND)
-		add_definitions(-DUSE_CUDA)
-		set(INCLUDES ${INCLUDES} cuda/)
+    find_package(CUDA)
+    if(CUDA_FOUND)
+        add_definitions(-DUSE_CUDA)
+        set(INCLUDES ${INCLUDES} cuda/)
 
-		add_library(convert STATIC cuda/convert.cu)
-		#CUDA_ADD_LIBRARY(convert.cuobj cuda/convert.cu )
+        add_library(convert STATIC cuda/convert.cu)
 
-		set(LIBS ${LIBS} convert ${CUDA_LIBRARIES})
+        set(LIBS ${LIBS} convert ${CUDA_LIBRARIES})
 
-		message(STATUS "cuda library " ${CUDA_LIBRARIES})
+        message(STATUS "cuda library " ${CUDA_LIBRARIES})
 
-		set(SOURCES ${SOURCES} cuda/convert.cu cuda/cudaobj.cpp)
-	endif()
+        #add_library(convert cuda/cuda_)
+
+        #target_link_libraries(convert PRIVATE )
+
+        set(SOURCES ${SOURCES} cuda/cudaobj.cpp)
+
+        set(CMAKE_CUDA_FLAGS "-arch=sm_30 -Xcompiler=-fpic")
+     endif()
 endif()
 
 add_executable(websock main.cpp
@@ -101,8 +105,8 @@ if(WIN32)
 endif()
 
 if(HAVE_OPENCL)
-	message(STATUS "opencl include dir " ${OpenCL_INCLUDE_DIRS})
-	set(INCLUDES ${INCLUDES} ${OpenCL_INCLUDE_DIRS})
+    message(STATUS "opencl include dir " ${OpenCL_INCLUDE_DIRS})
+    set(INCLUDES ${INCLUDES} ${OpenCL_INCLUDE_DIRS})
 endif()
 
 include_directories(${INCLUDES})
@@ -111,13 +115,22 @@ find_library(AVCODEC avcodec HINTS      ${DEFAULT_FFMPEGDIR})
 find_library(AVFORMAT avformat HINTS    ${DEFAULT_FFMPEGDIR})
 find_library(AVUTIL avutil HINTS        ${DEFAULT_FFMPEGDIR})
 
+#get_property(core_options TARGET Qt5::Core PROPERTY INTERFACE_COMPILE_OPTIONS)
+#string(REPLACE "-fPIC" "" new_core_options ${core_options})
+#set_property(TARGET Qt5::Core PROPERTY INTERFACE_COMPILE_OPTIONS ${new_core_options})
+#set_property(TARGET Qt5::Core PROPERTY INTERFACE_POSITION_INDEPENDENT_CODE "ON")
+
+set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -fPIC)
+
 set(LIBS ${LIBS} Qt5::Core Qt5::Widgets Qt5::Network Qt5::OpenGL
     ${AVCODEC} ${AVFORMAT} ${AVUTIL})
 
 if(WIN32)
-	set(LIBS ${LIBS} WS2_32 opengl32)
+    set(LIBS ${LIBS} WS2_32 opengl32)
 else()
     set(LIBS ${LIBS} pthread GL)
 endif()
+
+message(STATUS "cuda flags " ${CMAKE_CUDA_FLAGS})
 
 target_link_libraries(websock ${LIBS} OpenMP::OpenMP_CXX)

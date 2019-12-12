@@ -430,15 +430,15 @@ void WebSock::createImage(AVFrame *picture)
 {
 #ifdef USE_CUDA
 
-	QImage image = m_convertImageCu.createImage(picture);
+	PImage image = m_convertImageCu.createImage(picture);
 
 #elif USE_OPENCL
 
-	QImage image = m_convertImage.createImage(picture);
+	PImage image = m_convertImage.createImage(picture);
 
 #else
 
-	QImage image(picture->width, picture->height, QImage::Format_ARGB32);
+	PImage image = std::make_shared<QImage>(QImage(picture->width, picture->height, QImage::Format_ARGB32));
 
 //    saveImage(picture, "test.image");
 
@@ -450,7 +450,7 @@ void WebSock::createImage(AVFrame *picture)
 #pragma omp parallel for
 	for(int y = 0; y < picture->height; ++y){
 		uint8_t* il = &picture->data[0][y * picture->linesize[0]];
-		QRgb* sc = (QRgb*)image.scanLine(y);
+		QRgb* sc = (QRgb*)image->scanLine(y);
 		for(int x = 0; x < picture->width; ++x){
 			uchar r = il[x];
 			sc[x] = r;
@@ -461,8 +461,8 @@ void WebSock::createImage(AVFrame *picture)
 	for(int y = 0; y < picture->height >> 1; ++y){
 		uint8_t* il1 = &picture->data[1][y * picture->linesize[1]];
 		uint8_t* il2 = &picture->data[2][y * picture->linesize[2]];
-		QRgb* sc1 = (QRgb*)image.scanLine((y << 1) + 0);
-		QRgb* sc2 = (QRgb*)image.scanLine((y << 1) + 1);
+		QRgb* sc1 = (QRgb*)image->scanLine((y << 1) + 0);
+		QRgb* sc2 = (QRgb*)image->scanLine((y << 1) + 1);
 		for(int x = 0; x < picture->width >> 1; ++x){
 			uchar g = 0, b = 0;
 			g = il1[x];
@@ -489,7 +489,7 @@ bool WebSock::event(QEvent *ev)
         EventTest *et = (EventTest*)ev;
         m_framesH264.push(et->data);
         return true;
-    };
+	}
     return QThread::event(ev);
 }
 
@@ -513,7 +513,7 @@ WebSock::Frame::Frame(const WebSock::Frame &frame)
 	image = frame.image;
 }
 
-WebSock::Frame::Frame(const QImage &image)
+WebSock::Frame::Frame(const PImage &image)
 {
 	this->image = image;
 	done = true;
@@ -537,7 +537,7 @@ void WebSock::Frame::encode()
 
 	QImageReader reader(stream.device(), "jpeg");
 
-	image = reader.read();
+	image.reset(new QImage(reader.read()));
 
 	done = true;
 }
@@ -585,12 +585,12 @@ void loadImage(const QString &fileName, Image *picture)
 
 /////////////////////////
 
-QImage createImage(const Image *picture)
+PImage createImage(const Image *picture)
 {
     if(!picture || picture->empty())
-        return QImage();
+		return PImage();
 
-    QImage image(picture->width, picture->height, QImage::Format_ARGB32);
+	PImage image = std::make_shared<QImage>(QImage(picture->width, picture->height, QImage::Format_ARGB32));
 
     int numthr = omp_get_num_procs();
 
@@ -600,7 +600,7 @@ QImage createImage(const Image *picture)
 #pragma omp parallel for
     for(int y = 0; y < picture->height; ++y){
         uint8_t* il = (uint8_t*)&picture->data[0].data()[y * picture->linesize[0]];
-        QRgb* sc = (QRgb*)image.scanLine(y);
+		QRgb* sc = (QRgb*)image->scanLine(y);
         for(int x = 0; x < picture->width; ++x){
             uchar r = il[x];
             sc[x] = r;
@@ -611,8 +611,8 @@ QImage createImage(const Image *picture)
     for(int y = 0; y < picture->height >> 1; ++y){
         uint8_t* il1 = (uint8_t*)&picture->data[1].data()[y * picture->linesize[1]];
         uint8_t* il2 = (uint8_t*)&picture->data[2].data()[y * picture->linesize[2]];
-        QRgb* sc1 = (QRgb*)image.scanLine((y << 1) + 0);
-        QRgb* sc2 = (QRgb*)image.scanLine((y << 1) + 1);
+		QRgb* sc1 = (QRgb*)image->scanLine((y << 1) + 0);
+		QRgb* sc2 = (QRgb*)image->scanLine((y << 1) + 1);
         for(int x = 0; x < picture->width >> 1; ++x){
             uchar g = 0, b = 0;
             g = il1[x];
@@ -655,14 +655,13 @@ ConvertImage::ConvertImage(){
 
 }
 
-QImage ConvertImage::createImage(IMAGE *picture)
+PImage ConvertImage::createImage(IMAGE *picture)
 {
 	if(picture->width != m_image.width || picture->height != m_image.height){
 		m_program->freeBuffers();
 		m_image.width = picture->width;
 		m_image.height = picture->height;
 
-		m_output = QImage(picture->width, picture->height, QImage::Format_RGB888);
 
 		size_t Ysize = picture->linesize[0] * picture->height;
 		size_t Usize = picture->linesize[1] * picture->height/2;
@@ -675,6 +674,9 @@ QImage ConvertImage::createImage(IMAGE *picture)
 		m_V = m_program->createBuffer(Vsize, cl_::clProgram::READWRITE);
 		m_Rgb = m_program->createBuffer(RGBsize, cl_::clProgram::READ);
 	}
+
+	PImage output = std::make_shared<QImage>(QImage(picture->width, picture->height, QImage::Format_RGB888));
+
 
 	m_program->write(m_Y, picture->data[0]);
 	m_program->write(m_U, picture->data[1]);
@@ -693,19 +695,17 @@ QImage ConvertImage::createImage(IMAGE *picture)
 
 	bool res = cl_::clMainObject::instance().run(m_kernel, m_program, picture->width * picture->height);
 
-	res = m_program->read(m_Rgb, m_output.bits());
+	res = m_program->read(m_Rgb, output->bits());
 
-	return m_output;
+	return output;
 }
 
-QImage ConvertImage::createImage(Image *picture)
+PImage ConvertImage::createImage(Image *picture)
 {
 	if(picture->width != m_image.width || picture->height != m_image.height){
 		m_program->freeBuffers();
 		m_image.width = picture->width;
 		m_image.height = picture->height;
-
-		m_output = QImage(picture->width, picture->height, QImage::Format_RGB888);
 
 		size_t Ysize = picture->linesize[0] * picture->height;
 		size_t Usize = picture->linesize[1] * picture->height/2;
@@ -718,6 +718,7 @@ QImage ConvertImage::createImage(Image *picture)
 		m_V = m_program->createBuffer(Vsize, cl_::clProgram::WRITE);
 		m_Rgb = m_program->createBuffer(RGBsize, cl_::clProgram::READ);
 	}
+	PImage output = std::make_shared<QImage>(QImage(picture->width, picture->height, QImage::Format_RGB888));
 
 	m_program->write(m_Y, picture->data[0].data());
 	m_program->write(m_U, picture->data[1].data());
@@ -736,9 +737,9 @@ QImage ConvertImage::createImage(Image *picture)
 
 	bool res = cl_::clMainObject::instance().run(m_kernel, m_program, picture->width * picture->height);
 
-	res = m_program->read(m_Rgb, m_output.bits());
+	res = m_program->read(m_Rgb, output->bits());
 
-	return m_output;
+	return output;
 }
 
 #endif

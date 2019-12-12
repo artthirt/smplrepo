@@ -8,6 +8,8 @@
 VideoFrame::VideoFrame(QWidget *parent) : QGLWidget(parent)
 //  , m_camCapture(0)
 {
+	qRegisterMetaType<PImage>("PImage");
+
 	setAutoFillBackground(false);
 	m_is_tex_update = false;
 	m_is_update = false;
@@ -30,7 +32,7 @@ VideoFrame::~VideoFrame()
 
 void VideoFrame::setImage(const QImage &image)
 {
-	m_image = image;
+	m_image = std::make_shared<QImage>(image);
 	m_is_tex_update = true;
 	m_is_update = true;
 }
@@ -75,7 +77,7 @@ void VideoFrame::onTimeout()
 	}
 }
 
-void VideoFrame::onReceiveImage(const QImage &image)
+void VideoFrame::onReceiveImage(const PImage &image)
 {
 	m_image = image;
 	m_counter_fps++;
@@ -110,12 +112,12 @@ void addPt(std::vector< float >& buf, float x1, float x2)
 
 void VideoFrame::generateTexture()
 {
-	if(!m_is_tex_update || m_image.isNull())
+	if(!m_is_tex_update || !m_image.get() || m_image->isNull())
 		return;
 	m_is_tex_update = false;
 
 	int t = GL_RGB;
-	if(m_image.format() == QImage::Format_ARGB32 || m_image.format() == QImage::Format_RGB32)
+	if(m_image->format() == QImage::Format_ARGB32 || m_image->format() == QImage::Format_RGB32)
 		t = GL_RGBA;
 
 	glBindTexture(GL_TEXTURE_2D, m_bindTex);
@@ -123,15 +125,15 @@ void VideoFrame::generateTexture()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-	if(m_prev_width != m_image.width() || m_prev_height != m_image.height() || m_prev_type != t){
+	if(m_prev_width != m_image->width() || m_prev_height != m_image->height() || m_prev_type != t){
 		m_prev_type = t;
-		m_prev_width = m_image.width();
-		m_prev_height = m_image.height();
-		glTexImage2D(GL_TEXTURE_2D, 0, t, m_image.width(), m_image.height(),
-					 0, t, GL_UNSIGNED_BYTE, m_image.bits());
+		m_prev_width = m_image->width();
+		m_prev_height = m_image->height();
+		glTexImage2D(GL_TEXTURE_2D, 0, t, m_image->width(), m_image->height(),
+					 0, t, GL_UNSIGNED_BYTE, m_image->bits());
 	}else{
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_image.width(), m_image.height(),
-						t, GL_UNSIGNED_BYTE, m_image.bits());
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_image->width(), m_image->height(),
+						t, GL_UNSIGNED_BYTE, m_image->bits());
 	}
 }
 
@@ -162,7 +164,10 @@ void VideoFrame::drawImage()
 
 	m_model.scale(m_scale, m_scale, 1);
 
-	float arim = (float)m_image.width()/m_image.height();
+	if(!m_image.get() || m_image->isNull())
+		return;
+
+	float arim = (float)m_image->width()/m_image->height();
 	float ar = (float)width() / height();
 
 	if(m_rotateBy90){
@@ -304,7 +309,8 @@ void VideoFrame::paintEvent(QPaintEvent *event)
 
 	painter.drawText(10, 30, "fps " + QString::number(m_fps, 'f', 0));
 
-	painter.drawText(10, height() - 20, QString::number(m_image.width()) + "x" + QString::number(m_image.height()));
+	if(m_image.get())
+		painter.drawText(10, height() - 20, QString::number(m_image->width()) + "x" + QString::number(m_image->height()));
 
 	painter.end();
 

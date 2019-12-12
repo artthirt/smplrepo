@@ -18,10 +18,10 @@ void testFun()
 {
     Image im;
     loadImage("test.image", &im);
-    QImage qim = createImage(&im);
-    if(qim.isNull())
+	PImage qim = createImage(&im);
+	if(!qim.get() || qim->isNull())
         return;
-    qim.save("test.bmp");
+	qim->save("test.bmp");
 
     std::string cmd_str =
             "__kernel void test(__global int* message, int w, int h)\n"

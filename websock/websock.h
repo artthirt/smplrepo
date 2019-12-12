@@ -12,23 +12,14 @@
 #include <queue>
 #include <mutex>
 
+#include "common.h"
+
 extern "C"{
 #	include "libavcodec/avcodec.h"
 #	include "libavformat/avformat.h"
 }
 
 #include "videodata.h"
-
-struct Image{
-	int width   = 0;
-	int height  = 0;
-	int linesize[8];
-	std::vector< uint8_t > data[8];
-
-	bool empty() const{
-		return width == 0 || height == 0 || data[0].empty() || data[1].empty() || data[2].empty();
-	}
-};
 
 #ifdef USE_CUDA
 #include "cudaobj.h"
@@ -44,8 +35,8 @@ class ConvertImage{
 public:
 	ConvertImage();
 
-	QImage createImage(AVFrame *picture);
-	QImage createImage(Image *picture);
+	PImage createImage(AVFrame *picture);
+	PImage createImage(Image *picture);
 
 private:
 	cl_::_clProgram m_program;
@@ -56,7 +47,6 @@ private:
 	cl_::clBuffer m_Rgb;
 
 	Image m_image;
-	QImage m_output;
 
 	std::string m_progname;
 };
@@ -77,7 +67,7 @@ public:
 	QString fileName() const;
 
 signals:
-	void sendImage(QImage);
+	void sendImage(PImage);
 
 public slots:
 	void onReadyRead();
@@ -95,14 +85,14 @@ private:
 		QByteArray data;
 		bool done = false;
 		bool h264 = false;
-		QImage image;
+		PImage image;
 
 		std::unique_ptr<std::thread> thr;
 
 		Frame();
 		Frame(const QByteArray& data);
 		Frame(const Frame &frame);
-		Frame(const QImage& image);
+		Frame(const PImage& image);
 		~Frame();
 
 		void start();
@@ -171,7 +161,7 @@ void loadImage(const QString& fileName, Image *picture);
  * @param picture
  * @return
  */
-QImage createImage(const Image *picture);
+PImage createImage(const Image *picture);
 
 //////////////////////////////////////
 

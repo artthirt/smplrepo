@@ -10,6 +10,8 @@
 #include <QOpenGLFunctions>
 #include <QGLShaderProgram>
 
+#include "common.h"
+
 //#include "camcapture.h"
 
 class VideoFrame : public QGLWidget, private QOpenGLFunctions
@@ -33,10 +35,10 @@ signals:
 
 public slots:
     void onTimeout();
-    void onReceiveImage(const QImage& image);
+	void onReceiveImage(const PImage& image);
 
 private:
-    QImage m_image;
+	PImage m_image;
     bool m_is_update;
     bool m_is_tex_update;
     QTimer m_timer;

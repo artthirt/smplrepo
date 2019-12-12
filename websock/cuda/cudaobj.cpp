@@ -94,10 +94,11 @@ bool CudaObj::copyFrom(void *data)
 /////////////////////////////////////////////
 
 
-QImage ConvertImageCu::createImage(AVFrame *picture)
+PImage ConvertImageCu::createImage(AVFrame *picture)
 {
-	if(picture->width != m_output.width() || picture->height != m_output.height()){
-		m_output = QImage(picture->width, picture->height, QImage::Format_RGB888);
+	if(picture->width != m_image.width || picture->height != m_image.height){
+		m_image.width = picture->width;
+		m_image.height = picture->height;
 
 		size_t Ysize = picture->linesize[0] * picture->height;
 		size_t Usize = picture->linesize[1] * picture->height/2;
@@ -110,12 +111,13 @@ QImage ConvertImageCu::createImage(AVFrame *picture)
 		m_V.init(Vsize);
 		m_Rgb.init(RGBsize);
 	}
+	PImage output = std::make_shared<QImage>(QImage(picture->width, picture->height, QImage::Format_RGB888));
 
 	m_Y.copyTo(picture->data[0]);
 	m_U.copyTo(picture->data[1]);
 	m_V.copyTo(picture->data[2]);
 
-	int lsRgb = m_output.width() * 3;
+	int lsRgb = output->width() * 3;
 
 	cudaStreamQuery(0);
 	convert_yuv((const uint8_t*)m_Y.mem(), picture->linesize[0],
@@ -124,8 +126,8 @@ QImage ConvertImageCu::createImage(AVFrame *picture)
 			(uint8_t*)m_Rgb.mem(), lsRgb, picture->width, picture->height);
 	cudaStreamQuery(0);
 
-	m_Rgb.copyFrom(m_output.bits());
+	m_Rgb.copyFrom(output->bits());
 	cudaStreamQuery(0);
 
-	return m_output;
+	return output;
 }

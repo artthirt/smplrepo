@@ -3,6 +3,8 @@
 
 #include <QImage>
 
+#include "common.h"
+
 extern "C"{
 #	include "libavcodec/avcodec.h"
 #	include "libavformat/avformat.h"
@@ -34,14 +36,14 @@ private:
 
 class ConvertImageCu{
 public:
-	QImage createImage(AVFrame* picture);
+	PImage createImage(AVFrame* picture);
 private:
 	CudaObj m_Y;
 	CudaObj m_U;
 	CudaObj m_V;
 	CudaObj m_Rgb;
 
-	QImage m_output;
+	Image m_image;
 };
 
 

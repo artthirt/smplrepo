@@ -2,15 +2,15 @@ cmake_minimum_required(VERSION 3.10)
 
 message(STATUS "cmake version " ${CMAKE_VERSION})
 
-project(websock LANGUAGES CXX CUDA)
+project(websock LANGUAGES CXX)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
 option(HAVE_MMX "use mmx instructions" ON)
-option(HAVE_OPENCL "use opencl" ON)
-option(HAVE_CUDA "use cuda" ON)
+option(HAVE_OPENCL "use opencl" OFF)
+option(HAVE_CUDA "use cuda" OFF)
 
 if(CMAKE_VERSION VERSION_LESS "3.7.0")
     set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -58,6 +58,7 @@ endif()
 if(HAVE_CUDA)
     find_package(CUDA)
     if(CUDA_FOUND)
+        enable_language(CUDA)
         add_definitions(-DUSE_CUDA)
         set(INCLUDES ${INCLUDES} cuda/)
 
@@ -101,7 +102,7 @@ set(DEFAULT_FFMPEGDIR ./)
 if(WIN32)
     set(INCLUDES ${INCLUDES}
         ./ffmpeg/include)
-    set(DEFAULT_FFMPEGDIR ${DEFAULT_FFMPEGDIR})
+    set(DEFAULT_FFMPEGDIR ./ffmepg/bin/)
 endif()
 
 if(HAVE_OPENCL)
@@ -131,6 +132,6 @@ else()
     set(LIBS ${LIBS} pthread GL)
 endif()
 
-message(STATUS "cuda flags " ${CMAKE_CUDA_FLAGS})
+#message(STATUS "cuda flags " ${CMAKE_CUDA_FLAGS})
 
 target_link_libraries(websock ${LIBS} OpenMP::OpenMP_CXX)

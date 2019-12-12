@@ -24,6 +24,8 @@
 
 #define MAX_FRAMES			8
 
+#define MAX_QUEUE_SUZE		15
+
 #define MAX_BUFFERS			3000
 
 const uchar JPEG_STRING[] = {0xff, 0xd8, 0xff};
@@ -69,17 +71,17 @@ inline int _Rgb(uchar r, uchar g, uchar b)
 
 inline int conv_yuv_to_rgb(int Y, int U, int V)
 {
-    int R, G, B, C, D, E;
+	int R, G, B, C, D, E;
 
 	C = Y - 16;
 	D = U - 128;
 	E = V - 128;
 
-    R = clamp((298 * C + 409 * E + 128) >> 8);
-    G = clamp((298 * C - 100 * D - 208 * E + 128) >> 8);
-    B = clamp((298 * C + 516 * D + 128) >> 8);
+	R = clamp((298 * C + 409 * E + 128) >> 8);
+	G = clamp((298 * C - 100 * D - 208 * E + 128) >> 8);
+	B = clamp((298 * C + 516 * D + 128) >> 8);
 
-    return qRgb(R, G, B);
+	return qRgb(R, G, B);
 }
 
 #ifdef USE_MMX
@@ -87,52 +89,15 @@ inline int conv_yuv_to_rgb(int Y, int U, int V)
 #include <immintrin.h>
 
 union SHI64{
-    short s[4];
-    long long ll;
+	short s[4];
+	long long ll;
 };
 
 inline void conv_yuv_to_rgb(uchar Y0, uchar Y1, int U, int V, QRgb &rgb0, QRgb &rgb1)
 {
-    short C0, C1, D, E;
+	short C0, C1, D, E;
 
-    SHI64 RGB0, RGB1;
-
-    C0 = Y0 - 16;
-    C1 = Y1 - 16;
-    D = U - 128;
-    E = V - 128;
-
-    int T0 = 409 * E + 128;
-    int T1 = -100 * D - 208 * E + 128;
-    int T2 = 516 * D + 128;
-
-    __m64 mRGB0, mRGB1, r1, r2, t1;
-
-    RGB0.s[2] = ((298 * C0 + T0) >> 8);
-    RGB0.s[1] = ((298 * C0 + T1) >> 8);
-    RGB0.s[0] = ((298 * C0 + T2) >> 8);
-
-    RGB1.s[2] = ((298 * C1 + T0) >> 8);
-    RGB1.s[1] = ((298 * C1 + T1) >> 8);
-    RGB1.s[0] = ((298 * C1 + T2) >> 8);
-
-    mRGB0 = _mm_cvtsi64x_si64(RGB0.ll);
-    mRGB1 = _mm_cvtsi64x_si64(RGB1.ll);
-
-	r1 = _m_packuswb(mRGB0, t1);
-    r2 = _m_packuswb(mRGB1, t1);
-
-	rgb0 = (QRgb)_m_to_int(r1);
-    rgb1 = (QRgb)_m_to_int(r2);
-    //rgb0 = qRgb(RGB0[0], RGB0[1], RGB0[2]);
-    //rgb1 = qRgb(RGB1[0], RGB1[1], RGB1[2]);
-}
-
-#else
-
-inline void conv_yuv_to_rgb(uchar Y0, uchar Y1, int U, int V, QRgb &rgb0, QRgb &rgb1)
-{
-    int R0, G0, B0, R1, G1, B1, C0, C1, D, E;
+	SHI64 RGB0, RGB1;
 
 	C0 = Y0 - 16;
 	C1 = Y1 - 16;
@@ -141,18 +106,55 @@ inline void conv_yuv_to_rgb(uchar Y0, uchar Y1, int U, int V, QRgb &rgb0, QRgb &
 
 	int T0 = 409 * E + 128;
 	int T1 = -100 * D - 208 * E + 128;
-    int T2 = 516 * D + 128;
+	int T2 = 516 * D + 128;
 
-    R0 = clamp((298 * C0 + T0) >> 8);
-    G0 = clamp((298 * C0 + T1) >> 8);
-    B0 = clamp((298 * C0 + T2) >> 8);
+	__m64 mRGB0, mRGB1, r1, r2, t1;
 
-    R1 = clamp((298 * C1 + T0) >> 8);
-    G1 = clamp((298 * C1 + T1) >> 8);
-    B1 = clamp((298 * C1 + T2) >> 8);
+	RGB0.s[2] = ((298 * C0 + T0) >> 8);
+	RGB0.s[1] = ((298 * C0 + T1) >> 8);
+	RGB0.s[0] = ((298 * C0 + T2) >> 8);
 
-    rgb0 = qRgb(R0, G0, B0);
-    rgb1 = qRgb(R1, G1, B1);
+	RGB1.s[2] = ((298 * C1 + T0) >> 8);
+	RGB1.s[1] = ((298 * C1 + T1) >> 8);
+	RGB1.s[0] = ((298 * C1 + T2) >> 8);
+
+	mRGB0 = _mm_cvtsi64x_si64(RGB0.ll);
+	mRGB1 = _mm_cvtsi64x_si64(RGB1.ll);
+
+	r1 = _m_packuswb(mRGB0, t1);
+	r2 = _m_packuswb(mRGB1, t1);
+
+	rgb0 = (QRgb)_m_to_int(r1);
+	rgb1 = (QRgb)_m_to_int(r2);
+	//rgb0 = qRgb(RGB0[0], RGB0[1], RGB0[2]);
+	//rgb1 = qRgb(RGB1[0], RGB1[1], RGB1[2]);
+}
+
+#else
+
+inline void conv_yuv_to_rgb(uchar Y0, uchar Y1, int U, int V, QRgb &rgb0, QRgb &rgb1)
+{
+	int R0, G0, B0, R1, G1, B1, C0, C1, D, E;
+
+	C0 = Y0 - 16;
+	C1 = Y1 - 16;
+	D = U - 128;
+	E = V - 128;
+
+	int T0 = 409 * E + 128;
+	int T1 = -100 * D - 208 * E + 128;
+	int T2 = 516 * D + 128;
+
+	R0 = clamp((298 * C0 + T0) >> 8);
+	G0 = clamp((298 * C0 + T1) >> 8);
+	B0 = clamp((298 * C0 + T2) >> 8);
+
+	R1 = clamp((298 * C1 + T0) >> 8);
+	G1 = clamp((298 * C1 + T1) >> 8);
+	B1 = clamp((298 * C1 + T2) >> 8);
+
+	rgb0 = qRgb(R0, G0, B0);
+	rgb1 = qRgb(R1, G1, B1);
 }
 
 #endif
@@ -173,12 +175,12 @@ WebSock::WebSock(QObject *parent) : QThread(parent)
 
 	m_fileName = "test.bin";
 
-    memset(&m_frame, 0, sizeof(m_frame));
+	memset(&m_frame, 0, sizeof(m_frame));
 
 	initH264();
 
-    m_decodeThread.reset(new std::thread(std::bind(&WebSock::doSendPktToCodec, this)));
-	//m_decodeThread2.reset(new std::thread(std::bind(&WebSock::doGetDecodedFrame, this)));
+	m_decodeThread.reset(new std::thread(std::bind(&WebSock::doSendPktToCodec, this)));
+	m_decodeThread2.reset(new std::thread(std::bind(&WebSock::doGetDecodedFrame, this)));
 }
 
 WebSock::~WebSock()
@@ -188,15 +190,15 @@ WebSock::~WebSock()
 	quit();
 	wait();
 
-    if(m_decodeThread.get()){
+	if(m_decodeThread.get()){
 		m_decodeThread->join();
 	}
 
-    if(m_decodeThread2.get()){
-        m_decodeThread2->join();
-    }
+	if(m_decodeThread2.get()){
+		m_decodeThread2->join();
+	}
 
-    if(m_ctx){
+	if(m_ctx){
 #if LIBAVCODEC_VERSION_MAJOR > 56
 		avcodec_free_context(&m_ctx);
 #else
@@ -318,30 +320,33 @@ void WebSock::initH264()
 	}else{
 		m_ctx = avcodec_alloc_context3(m_codec);
 
-        AVDictionary *dict = nullptr;
-        av_dict_set(&dict, "threads", "auto", 0);
-        av_dict_set(&dict, "framerate", "30", 0);
-        av_dict_set(&dict, "refcounted_frames", "1", 0);
-        av_dict_set_int(&dict, "lowres", m_codec->max_lowres, 0);
+		AVDictionary *dict = nullptr;
+		av_dict_set(&dict, "threads", "auto", 0);
+		av_dict_set(&dict, "framerate", "30", 0);
+		av_dict_set(&dict, "refcounted_frames", "1", 0);
+		av_dict_set_int(&dict, "lowres", m_codec->max_lowres, 0);
 
-        if(avcodec_open2(m_ctx, m_codec, &dict) < 0) {
+		if(avcodec_open2(m_ctx, m_codec, &dict) < 0) {
 			printf("Error: could not open codec.\n");
 			return;
 		}
-        m_ctx->pkt_timebase.den = 1200000;
-        m_ctx->pkt_timebase.num = 1;
-    }
+		m_ctx->pkt_timebase.den = 1200000;
+		m_ctx->pkt_timebase.num = 1;
+	}
 }
 
 void WebSock::doGetDecodedFrame()
 {
-//    while(!m_done){
-//        if(m_is_update_frame){
-//            decodeH264();
-//        }else{
-//            std::this_thread::sleep_for(std::chrono::milliseconds(2));
-//        }
-//    }
+	while(!m_done){
+		if(!m_avframes.empty()){
+			AVFrame *picture = m_avframes.front();
+			m_avframes.pop();
+			createImage(picture);
+			av_frame_free(&picture);
+		}else{
+			std::this_thread::sleep_for(std::chrono::milliseconds(2));
+		}
+	}
 }
 
 void WebSock::doSendPktToCodec()
@@ -349,55 +354,55 @@ void WebSock::doSendPktToCodec()
 	while(!m_done){
 		decodeH264();
 
-        if(!m_framesH264.empty()){
+		if(!m_framesH264.empty()){
 			//m_mutexh.lock();
 			QByteArray data = m_framesH264.front();
 			//m_mutexh.unlock();
-            m_framesH264.pop();
+			m_framesH264.pop();
 
-            bool res = doSendPkt(data);
+			bool res = doSendPkt(data);
 //            if(res){
 //            }else{
 //                std::this_thread::sleep_for(std::chrono::milliseconds(2));
 //            }
-        }else{
-            std::this_thread::sleep_for(std::chrono::milliseconds(2));
-        }
-    }
+		}else{
+			std::this_thread::sleep_for(std::chrono::milliseconds(2));
+		}
+	}
 }
 
 bool WebSock::doSendPkt(const QByteArray& data)
 {
-    AVPacket pkt;
-    av_init_packet(&pkt);
+	AVPacket pkt;
+	av_init_packet(&pkt);
 
-    pkt.dts = AV_NOPTS_VALUE;
-    pkt.stream_index = 0;
-    pkt.flags = 0;
-    pkt.side_data = nullptr;
-    pkt.side_data_elems = 0;
-    pkt.duration = 0;
-    pkt.pos = -1;
+	pkt.dts = AV_NOPTS_VALUE;
+	pkt.stream_index = 0;
+	pkt.flags = 0;
+	pkt.side_data = nullptr;
+	pkt.side_data_elems = 0;
+	pkt.duration = 0;
+	pkt.pos = -1;
 
-    pkt.pts = m_numpack;
-    pkt.data = (uint8_t*)data.data();
-    pkt.size = data.size();
+	pkt.pts = m_numpack;
+	pkt.data = (uint8_t*)data.data();
+	pkt.size = data.size();
 
-    int res = 0;
+	int res = 0;
 
-    do{
+	do{
 		//m_mutexh.lock();
-        res = avcodec_send_packet(m_ctx, &pkt);
+		res = avcodec_send_packet(m_ctx, &pkt);
 		//m_mutexh.unlock();
-    }while(res == AVERROR(EAGAIN));
+	}while(res == AVERROR(EAGAIN));
 
-    if(res < 0){
+	if(res < 0){
 //        char buf[256] = {0};
 //        av_make_error_string(buf, 256, res);
 //        qDebug("error %s \n", buf);
-    }else{
-    }
-    return res != AVERROR(EAGAIN);
+	}else{
+	}
+	return res != AVERROR(EAGAIN);
 }
 
 void WebSock::decodeH264()
@@ -405,25 +410,28 @@ void WebSock::decodeH264()
 //	AVFrame *picture = av_frame_alloc();
 //	memset(picture, 0, sizeof(picture));
 
-    if(parseH264(&m_frame)){
-        av_frame_unref(&m_frame);
-    }
+	parseH264();
 //	av_frame_free(&picture);
 }
 
-bool WebSock::parseH264(AVFrame *picture)
+bool WebSock::parseH264()
 {
-    int res = 0;
-    do{
+	int res = 0;
+	AVFrame *picture = av_frame_alloc();
+	do{
 		//m_mutexh.lock();
-        res = avcodec_receive_frame(m_ctx, picture);
+		res = avcodec_receive_frame(m_ctx, picture);
 		//m_mutexh.unlock();
 
-        if(res == 0){
-            createImage(picture);
-        }
-    }while(res != AVERROR(EAGAIN));
-    return res >= 0;
+		if(res == 0 && m_avframes.size() < MAX_QUEUE_SUZE){
+			m_avframes.push(picture);
+			picture = av_frame_alloc();
+			//createImage(picture);
+		}else{
+			av_frame_unref(picture);
+		}
+	}while(res != AVERROR(EAGAIN));
+	return res >= 0;
 }
 
 void WebSock::createImage(AVFrame *picture)
@@ -442,7 +450,7 @@ void WebSock::createImage(AVFrame *picture)
 
 //    saveImage(picture, "test.image");
 
-    int numthr = omp_get_num_procs();
+	int numthr = omp_get_num_procs();
 
 	if(numthr > 6)
 		omp_set_num_threads(numthr/2);
@@ -480,17 +488,17 @@ void WebSock::createImage(AVFrame *picture)
 		m_mutex.lock();
 		m_frames.push(Frame(image));
 		m_mutex.unlock();
-    }
+	}
 }
 
 bool WebSock::event(QEvent *ev)
 {
-    if(ev->type() == EventTest::EVENT){
-        EventTest *et = (EventTest*)ev;
-        m_framesH264.push(et->data);
-        return true;
+	if(ev->type() == EventTest::EVENT){
+		EventTest *et = (EventTest*)ev;
+		m_framesH264.push(et->data);
+		return true;
 	}
-    return QThread::event(ev);
+	return QThread::event(ev);
 }
 
 ///////////////////////////
@@ -546,86 +554,86 @@ void WebSock::Frame::encode()
 
 void saveImage(AVFrame* picture, const QString& fileName)
 {
-    QFile f(fileName);
-    f.open(QIODevice::WriteOnly);
+	QFile f(fileName);
+	f.open(QIODevice::WriteOnly);
 
-    f.write((char*)&picture->width, sizeof(int));
-    f.write((char*)&picture->height, sizeof(int));
-    f.write((char*)picture->linesize, sizeof(picture->linesize));
-    f.write((char*)picture->data[0], picture->linesize[0] * picture->height);
-    f.write((char*)picture->data[1], picture->linesize[1] * picture->height);
-    f.write((char*)picture->data[2], picture->linesize[2] * picture->height);
+	f.write((char*)&picture->width, sizeof(int));
+	f.write((char*)&picture->height, sizeof(int));
+	f.write((char*)picture->linesize, sizeof(picture->linesize));
+	f.write((char*)picture->data[0], picture->linesize[0] * picture->height);
+	f.write((char*)picture->data[1], picture->linesize[1] * picture->height);
+	f.write((char*)picture->data[2], picture->linesize[2] * picture->height);
 
-    f.close();
+	f.close();
 }
 
 void loadImage(const QString &fileName, Image *picture)
 {
-    if(!QFile::exists(fileName))
-        return;
+	if(!QFile::exists(fileName))
+		return;
 
-    QFile f(fileName);
+	QFile f(fileName);
 
-    f.open(QIODevice::ReadOnly);
+	f.open(QIODevice::ReadOnly);
 
-    f.read((char*)&picture->width, sizeof(int));
-    f.read((char*)&picture->height, sizeof(int));
-    f.read((char*)picture->linesize, sizeof(picture->linesize));
+	f.read((char*)&picture->width, sizeof(int));
+	f.read((char*)&picture->height, sizeof(int));
+	f.read((char*)picture->linesize, sizeof(picture->linesize));
 
-    picture->data[0].resize(picture->linesize[0] * picture->height);
-    picture->data[1].resize(picture->linesize[1] * picture->height);
-    picture->data[2].resize(picture->linesize[2] * picture->height);
+	picture->data[0].resize(picture->linesize[0] * picture->height);
+	picture->data[1].resize(picture->linesize[1] * picture->height);
+	picture->data[2].resize(picture->linesize[2] * picture->height);
 
-    f.read((char*)picture->data[0].data(), picture->linesize[0] * picture->height);
-    f.read((char*)picture->data[1].data(), picture->linesize[1] * picture->height);
-    f.read((char*)picture->data[2].data(), picture->linesize[2] * picture->height);
+	f.read((char*)picture->data[0].data(), picture->linesize[0] * picture->height);
+	f.read((char*)picture->data[1].data(), picture->linesize[1] * picture->height);
+	f.read((char*)picture->data[2].data(), picture->linesize[2] * picture->height);
 
-    f.close();
+	f.close();
 }
 
 /////////////////////////
 
 PImage createImage(const Image *picture)
 {
-    if(!picture || picture->empty())
+	if(!picture || picture->empty())
 		return PImage();
 
 	PImage image = std::make_shared<QImage>(QImage(picture->width, picture->height, QImage::Format_ARGB32));
 
-    int numthr = omp_get_num_procs();
+	int numthr = omp_get_num_procs();
 
-    if(numthr > 6)
-        omp_set_num_threads(numthr/2);
+	if(numthr > 6)
+		omp_set_num_threads(numthr/2);
 
 #pragma omp parallel for
-    for(int y = 0; y < picture->height; ++y){
-        uint8_t* il = (uint8_t*)&picture->data[0].data()[y * picture->linesize[0]];
+	for(int y = 0; y < picture->height; ++y){
+		uint8_t* il = (uint8_t*)&picture->data[0].data()[y * picture->linesize[0]];
 		QRgb* sc = (QRgb*)image->scanLine(y);
-        for(int x = 0; x < picture->width; ++x){
-            uchar r = il[x];
-            sc[x] = r;
-        }
-    }
+		for(int x = 0; x < picture->width; ++x){
+			uchar r = il[x];
+			sc[x] = r;
+		}
+	}
 
 #pragma omp parallel for
-    for(int y = 0; y < picture->height >> 1; ++y){
-        uint8_t* il1 = (uint8_t*)&picture->data[1].data()[y * picture->linesize[1]];
-        uint8_t* il2 = (uint8_t*)&picture->data[2].data()[y * picture->linesize[2]];
+	for(int y = 0; y < picture->height >> 1; ++y){
+		uint8_t* il1 = (uint8_t*)&picture->data[1].data()[y * picture->linesize[1]];
+		uint8_t* il2 = (uint8_t*)&picture->data[2].data()[y * picture->linesize[2]];
 		QRgb* sc1 = (QRgb*)image->scanLine((y << 1) + 0);
 		QRgb* sc2 = (QRgb*)image->scanLine((y << 1) + 1);
-        for(int x = 0; x < picture->width >> 1; ++x){
-            uchar g = 0, b = 0;
-            g = il1[x];
-            b = il2[x];
+		for(int x = 0; x < picture->width >> 1; ++x){
+			uchar g = 0, b = 0;
+			g = il1[x];
+			b = il2[x];
 
 
-            conv_yuv_to_rgb((uchar)sc1[(x << 1)], (uchar)sc1[(x << 1) + 1], g, b, sc1[(x << 1)], sc1[(x << 1) + 1]);
-            conv_yuv_to_rgb((uchar)sc2[(x << 1)], (uchar)sc2[(x << 1) + 1], g, b, sc2[(x << 1)], sc2[(x << 1) + 1]);
+			conv_yuv_to_rgb((uchar)sc1[(x << 1)], (uchar)sc1[(x << 1) + 1], g, b, sc1[(x << 1)], sc1[(x << 1) + 1]);
+			conv_yuv_to_rgb((uchar)sc2[(x << 1)], (uchar)sc2[(x << 1) + 1], g, b, sc2[(x << 1)], sc2[(x << 1) + 1]);
 
-        }
-    }
+		}
+	}
 
-    return image;
+	return image;
 }
 
 //////////////////////////////////

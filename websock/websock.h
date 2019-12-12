@@ -102,6 +102,7 @@ private:
 
 	std::queue<Frame> m_frames;
 	std::queue<QByteArray> m_framesH264;
+	std::queue<AVFrame*> m_avframes;
 	std::mutex m_mutex;
 	std::mutex m_mutexh;
 
@@ -110,13 +111,13 @@ private:
 	std::unique_ptr<QTimer> m_timer;
 
 	std::unique_ptr<std::thread> m_decodeThread;
-    std::unique_ptr<std::thread> m_decodeThread2;
+	std::unique_ptr<std::thread> m_decodeThread2;
 
 	void tryParseData(const QByteArray &data);
 
 	AVCodec* m_codec		= nullptr;
 	AVCodecContext *m_ctx	= nullptr;
-    AVFrame m_frame;
+	AVFrame m_frame;
 	bool m_done				= false;
 	uint m_numpack			= 0;
 
@@ -129,16 +130,16 @@ private:
 #endif
 
 	void initH264();
-    void doGetDecodedFrame();
-    void doSendPktToCodec();
-    bool doSendPkt(const QByteArray &data);
-    void decodeH264();
-    bool parseH264(AVFrame *picture);
+	void doGetDecodedFrame();
+	void doSendPktToCodec();
+	bool doSendPkt(const QByteArray &data);
+	void decodeH264();
+	bool parseH264();
 	void createImage(AVFrame *picture);
 
-    // QObject interface
+	// QObject interface
 public:
-    bool event(QEvent *ev);
+	bool event(QEvent *ev);
 };
 
 /**

@@ -134,7 +134,7 @@ set(LIBS ${LIBS} Qt5::Core Qt5::Widgets Qt5::Network Qt5::OpenGL
 if(WIN32)
     set(LIBS ${LIBS} WS2_32 opengl32)
 else()
-    set(LIBS ${LIBS} pthread GL)
+    set(LIBS ${LIBS} pthread GL dl)
 endif()
 
 #message(STATUS "cuda flags " ${CMAKE_CUDA_FLAGS})

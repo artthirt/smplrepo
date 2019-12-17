@@ -12,6 +12,11 @@ namespace cl_{  /** begin namespace */
 #define CL_RUNTIME_EXPORT __declspec(dllexport)
 #define CL	cl_
 
+#else
+#define CL_RUNTIME_EXPORT
+#define CL cl_
+#endif
+
 typedef CL_RUNTIME_EXPORT cl_int (CL_API_CALL*clBuildProgram_FN)(cl_program, cl_uint, const cl_device_id*, const char*, void (CL_CALLBACK*)
 															 (cl_program, void*), void*);
 typedef CL_RUNTIME_EXPORT cl_int (CL_API_CALL*clCompileProgram_FN)(cl_program, cl_uint, const cl_device_id*, const char*, cl_uint,
@@ -69,6 +74,8 @@ clReleaseMemObject_FN			clReleaseMemObject       ;
 clReleaseProgram_FN				clReleaseProgram         ;
 clReleaseContext_FN				clReleaseContext         ;
 clReleaseDevice_FN				clReleaseDevice          ;
+
+#ifdef _MSC_VER
 
 #include <Windows.h>
 
@@ -128,8 +135,64 @@ private:
 init_cl_functions init;
 
 #else
-#define CL_RUNTIME_EXPORT
-#define CL	cl
+
+#include <dlfcn.h>
+
+class init_cl_functions{
+public:
+
+    init_cl_functions()
+    {
+        hMod = nullptr;
+        cl_functions();
+    }
+    ~init_cl_functions()
+    {
+        dlclose(hMod);
+    }
+
+    void cl_functions()
+    {
+        hMod = dlopen("libOpenCL.so", RTLD_LAZY);
+
+        if(!hMod){
+            printf("opencl library not found\n");
+            return;
+        }
+
+        clBuildProgram  = (clBuildProgram_FN)dlsym(hMod, "clBuildProgram");
+        clCompileProgram          = (clCompileProgram_FN         )	dlsym(hMod, "clCompileProgram");
+        clCreateBuffer            = (clCreateBuffer_FN           )	dlsym(hMod, "clCreateBuffer");
+        clCreateKernel            = (clCreateKernel_FN           )	dlsym(hMod, "clCreateKernel");
+        clCreateProgramWithSource = (clCreateProgramWithSource_FN)	dlsym(hMod, "clCreateProgramWithSource");
+        clGetDeviceIDs            = (clGetDeviceIDs_FN           )	dlsym(hMod, "clGetDeviceIDs");
+        clGetDeviceInfo           = (clGetDeviceInfo_FN          )	dlsym(hMod, "clGetDeviceInfo");
+        clCreateContext           = (clCreateContext_FN          )	dlsym(hMod, "clCreateContext");
+        clCreateCommandQueue      = (clCreateCommandQueue_FN     )	dlsym(hMod, "clCreateCommandQueue");
+        clGetProgramBuildInfo     = (clGetProgramBuildInfo_FN    )	dlsym(hMod, "clGetProgramBuildInfo");
+        clEnqueueNDRangeKernel    = (clEnqueueNDRangeKernel_FN   )	dlsym(hMod, "clEnqueueNDRangeKernel");
+        clEnqueueReadBuffer       = (clEnqueueReadBuffer_FN      )	dlsym(hMod, "clEnqueueReadBuffer");
+        clEnqueueWriteBuffer      = (clEnqueueWriteBuffer_FN     )	dlsym(hMod, "clEnqueueWriteBuffer");
+        clFinish                  = (clFinish_FN                 )	dlsym(hMod, "clFinish");
+        clFlush                   = (clFlush_FN                  )	dlsym(hMod, "clFlush");
+        clGetPlatformIDs          = (clGetPlatformIDs_FN         )	dlsym(hMod, "clGetPlatformIDs");
+        clGetPlatformInfo         = (clGetPlatformInfo_FN        )	dlsym(hMod, "clGetPlatformInfo");
+        clLinkProgram             = (clLinkProgram_FN            )	dlsym(hMod, "clLinkProgram");
+        clSetKernelArg            = (clSetKernelArg_FN           )	dlsym(hMod, "clSetKernelArg");
+        clReleaseCommandQueue     = (clReleaseCommandQueue_FN    )	dlsym(hMod, "clReleaseCommandQueue");
+        clReleaseKernel           = (clReleaseKernel_FN          )	dlsym(hMod, "clReleaseKernel");
+        clReleaseMemObject        = (clReleaseMemObject_FN       )	dlsym(hMod, "clReleaseMemObject");
+        clReleaseProgram          = (clReleaseProgram_FN         )	dlsym(hMod, "clReleaseProgram");
+        clReleaseContext          = (clReleaseContext_FN         )	dlsym(hMod, "clReleaseContext");
+        clReleaseDevice           = (clReleaseDevice_FN          )	dlsym(hMod, "clReleaseDevice");
+    }
+
+private:
+    void* hMod;
+};
+
+init_cl_functions init;
+
 #endif
 
 class clMainPrivate

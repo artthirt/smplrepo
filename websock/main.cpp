@@ -98,26 +98,26 @@ void testFun()
 
 #endif
 
-    bool ret = false;
+//    bool ret = false;
 
-    ret = cl_::clMainObject::instance().init();
-    cl_::_clProgram prog = cl_::clMainObject::instance().getProgram(cmd_str);
-    ret = cl_::clMainObject::instance().buildProgram(prog);
+//    ret = cl_::clMainObject::instance().init();
+//    cl_::_clProgram prog = cl_::clMainObject::instance().getProgram(cmd_str);
+//    ret = cl_::clMainObject::instance().buildProgram(prog);
 
-    const int memLenght = 100 * 50;
-    cl_int mem[memLenght] = {0};
+//    const int memLenght = 100 * 50;
+//    cl_int mem[memLenght] = {0};
 
-    cl_::clKernel kernel = prog->createKernel("test");
-    cl_::clBuffer buf = prog->createBuffer(memLenght);
-    ret = prog->write(buf, mem);
+//    cl_::clKernel kernel = prog->createKernel("test");
+//    cl_::clBuffer buf = prog->createBuffer(memLenght);
+//    ret = prog->write(buf, mem);
 
-    ret = prog->setArg(kernel, 0, buf);
-    ret = prog->setArg(kernel, 1, 100);
-    ret = prog->setArg(kernel, 2, 50);
+//    ret = prog->setArg(kernel, 0, buf);
+//    ret = prog->setArg(kernel, 1, 100);
+//    ret = prog->setArg(kernel, 2, 50);
 
-    ret = cl_::clMainObject::instance().run(kernel, prog, 50);
+//    ret = cl_::clMainObject::instance().run(kernel, prog, 50);
 
-    ret = prog->read(buf, mem);
+//    ret = prog->read(buf, mem);
 
     printf("end test\n");
     //    std::vector< cl::Platform > platforms;

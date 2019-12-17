@@ -8,6 +8,130 @@ using namespace cl_;
 
 namespace cl_{  /** begin namespace */
 
+#ifdef _MSC_VER
+#define CL_RUNTIME_EXPORT __declspec(dllexport)
+#define CL	cl_
+
+typedef CL_RUNTIME_EXPORT cl_int (CL_API_CALL*clBuildProgram_FN)(cl_program, cl_uint, const cl_device_id*, const char*, void (CL_CALLBACK*)
+															 (cl_program, void*), void*);
+typedef CL_RUNTIME_EXPORT cl_int (CL_API_CALL*clCompileProgram_FN)(cl_program, cl_uint, const cl_device_id*, const char*, cl_uint,
+															   const cl_program*, const char**, void (CL_CALLBACK*) (cl_program, void*), void*);
+typedef CL_RUNTIME_EXPORT cl_mem (CL_API_CALL*clCreateBuffer_FN)(cl_context, cl_mem_flags, size_t, void*, cl_int*);
+typedef CL_RUNTIME_EXPORT cl_kernel (CL_API_CALL*clCreateKernel_FN)(cl_program, const char*, cl_int*);
+typedef CL_RUNTIME_EXPORT cl_program (CL_API_CALL*clCreateProgramWithSource_FN)(cl_context, cl_uint, const char**, const size_t*, cl_int*);
+typedef CL_RUNTIME_EXPORT cl_int (CL_API_CALL*clGetDeviceIDs_FN)(cl_platform_id, cl_device_type, cl_uint, cl_device_id*, cl_uint*);
+typedef CL_RUNTIME_EXPORT cl_int (CL_API_CALL*clGetDeviceInfo_FN)(cl_device_id, cl_device_info, size_t, void*, size_t*);
+typedef CL_RUNTIME_EXPORT cl_context (CL_API_CALL*clCreateContext_FN)(const cl_context_properties*, cl_uint, const cl_device_id*,
+																   void (CL_CALLBACK*) (const char*, const void*, size_t, void*),
+																   void*, cl_int*);
+typedef CL_RUNTIME_EXPORT cl_context (CL_API_CALL*clCreateContext_FN)(const cl_context_properties*, cl_uint, const cl_device_id*, void (CL_CALLBACK*) (const char*, const void*, size_t, void*), void*, cl_int*);
+typedef CL_RUNTIME_EXPORT cl_command_queue (CL_API_CALL*clCreateCommandQueue_FN)(cl_context, cl_device_id, cl_command_queue_properties, cl_int*);
+typedef CL_RUNTIME_EXPORT cl_int (CL_API_CALL*clGetDeviceIDs_FN)(cl_platform_id, cl_device_type, cl_uint, cl_device_id*, cl_uint*);
+typedef CL_RUNTIME_EXPORT cl_int (CL_API_CALL*clGetProgramBuildInfo_FN)(cl_program, cl_device_id, cl_program_build_info, size_t, void*, size_t*);
+typedef CL_RUNTIME_EXPORT cl_int (CL_API_CALL*clEnqueueNDRangeKernel_FN)(cl_command_queue, cl_kernel, cl_uint, const size_t*, const size_t*, const size_t*, cl_uint, const cl_event*, cl_event*);
+typedef CL_RUNTIME_EXPORT cl_int (CL_API_CALL*clEnqueueReadBuffer_FN)(cl_command_queue, cl_mem, cl_bool, size_t, size_t, void*, cl_uint, const cl_event*, cl_event*);
+typedef CL_RUNTIME_EXPORT cl_int (CL_API_CALL*clEnqueueWriteBuffer_FN)(cl_command_queue, cl_mem, cl_bool, size_t, size_t, const void*, cl_uint, const cl_event*, cl_event*);
+typedef CL_RUNTIME_EXPORT cl_int (CL_API_CALL*clFinish_FN)(cl_command_queue);
+typedef CL_RUNTIME_EXPORT cl_int (CL_API_CALL*clFlush_FN)(cl_command_queue);
+typedef CL_RUNTIME_EXPORT cl_int (CL_API_CALL*clGetPlatformIDs_FN)(cl_uint, cl_platform_id*, cl_uint*);
+typedef CL_RUNTIME_EXPORT cl_int (CL_API_CALL*clGetPlatformInfo_FN)(cl_platform_id, cl_platform_info, size_t, void*, size_t*);
+typedef CL_RUNTIME_EXPORT cl_program (CL_API_CALL*clLinkProgram_FN)(cl_context, cl_uint, const cl_device_id*, const char*, cl_uint, const cl_program*, void (CL_CALLBACK*) (cl_program, void*), void*, cl_int*);
+typedef CL_RUNTIME_EXPORT cl_int (CL_API_CALL*clSetKernelArg_FN)(cl_kernel, cl_uint, size_t, const void*);
+typedef CL_RUNTIME_EXPORT cl_int (CL_API_CALL*clReleaseCommandQueue_FN)(cl_command_queue);
+typedef CL_RUNTIME_EXPORT cl_int (CL_API_CALL*clReleaseKernel_FN)(cl_kernel);
+typedef CL_RUNTIME_EXPORT cl_int (CL_API_CALL*clReleaseMemObject_FN)(cl_mem);
+typedef CL_RUNTIME_EXPORT cl_int (CL_API_CALL*clReleaseProgram_FN)(cl_program);
+typedef CL_RUNTIME_EXPORT cl_int (CL_API_CALL*clReleaseContext_FN)(cl_context);
+typedef CL_RUNTIME_EXPORT cl_int (CL_API_CALL*clReleaseDevice_FN)(cl_device_id);
+
+clBuildProgram_FN				clBuildProgram           ;
+clCompileProgram_FN				clCompileProgram         ;
+clCreateBuffer_FN				clCreateBuffer           ;
+clCreateKernel_FN				clCreateKernel           ;
+clCreateProgramWithSource_FN	clCreateProgramWithSource;
+clGetDeviceIDs_FN				clGetDeviceIDs           ;
+clGetDeviceInfo_FN				clGetDeviceInfo          ;
+clCreateContext_FN				clCreateContext          ;
+clCreateCommandQueue_FN			clCreateCommandQueue     ;
+clGetProgramBuildInfo_FN		clGetProgramBuildInfo    ;
+clEnqueueNDRangeKernel_FN		clEnqueueNDRangeKernel   ;
+clEnqueueReadBuffer_FN			clEnqueueReadBuffer      ;
+clEnqueueWriteBuffer_FN			clEnqueueWriteBuffer     ;
+clFinish_FN						clFinish                 ;
+clFlush_FN						clFlush                  ;
+clGetPlatformIDs_FN				clGetPlatformIDs         ;
+clGetPlatformInfo_FN			clGetPlatformInfo        ;
+clLinkProgram_FN				clLinkProgram            ;
+clSetKernelArg_FN				clSetKernelArg           ;
+clReleaseCommandQueue_FN		clReleaseCommandQueue    ;
+clReleaseKernel_FN				clReleaseKernel          ;
+clReleaseMemObject_FN			clReleaseMemObject       ;
+clReleaseProgram_FN				clReleaseProgram         ;
+clReleaseContext_FN				clReleaseContext         ;
+clReleaseDevice_FN				clReleaseDevice          ;
+
+#include <Windows.h>
+
+class init_cl_functions{
+public:
+
+	init_cl_functions()
+	{
+		hMod = nullptr;
+		cl_functions();
+	}
+	~init_cl_functions()
+	{
+		FreeLibrary(hMod);
+	}
+
+	void cl_functions()
+	{
+		hMod = LoadLibraryA("OpenCL.dll");
+
+		if(!hMod){
+			printf("opencl library not found\n");
+			return;
+		}
+
+		clBuildProgram  = (clBuildProgram_FN)GetProcAddress(hMod, "clBuildProgram");
+		clCompileProgram          = (clCompileProgram_FN         )	GetProcAddress(hMod, "clCompileProgram");
+		clCreateBuffer            = (clCreateBuffer_FN           )	GetProcAddress(hMod, "clCreateBuffer");
+		clCreateKernel            = (clCreateKernel_FN           )	GetProcAddress(hMod, "clCreateKernel");
+		clCreateProgramWithSource = (clCreateProgramWithSource_FN)	GetProcAddress(hMod, "clCreateProgramWithSource");
+		clGetDeviceIDs            = (clGetDeviceIDs_FN           )	GetProcAddress(hMod, "clGetDeviceIDs");
+		clGetDeviceInfo           = (clGetDeviceInfo_FN          )	GetProcAddress(hMod, "clGetDeviceInfo");
+		clCreateContext           = (clCreateContext_FN          )	GetProcAddress(hMod, "clCreateContext");
+		clCreateCommandQueue      = (clCreateCommandQueue_FN     )	GetProcAddress(hMod, "clCreateCommandQueue");
+		clGetProgramBuildInfo     = (clGetProgramBuildInfo_FN    )	GetProcAddress(hMod, "clGetProgramBuildInfo");
+		clEnqueueNDRangeKernel    = (clEnqueueNDRangeKernel_FN   )	GetProcAddress(hMod, "clEnqueueNDRangeKernel");
+		clEnqueueReadBuffer       = (clEnqueueReadBuffer_FN      )	GetProcAddress(hMod, "clEnqueueReadBuffer");
+		clEnqueueWriteBuffer      = (clEnqueueWriteBuffer_FN     )	GetProcAddress(hMod, "clEnqueueWriteBuffer");
+		clFinish                  = (clFinish_FN                 )	GetProcAddress(hMod, "clFinish");
+		clFlush                   = (clFlush_FN                  )	GetProcAddress(hMod, "clFlush");
+		clGetPlatformIDs          = (clGetPlatformIDs_FN         )	GetProcAddress(hMod, "clGetPlatformIDs");
+		clGetPlatformInfo         = (clGetPlatformInfo_FN        )	GetProcAddress(hMod, "clGetPlatformInfo");
+		clLinkProgram             = (clLinkProgram_FN            )	GetProcAddress(hMod, "clLinkProgram");
+		clSetKernelArg            = (clSetKernelArg_FN           )	GetProcAddress(hMod, "clSetKernelArg");
+		clReleaseCommandQueue     = (clReleaseCommandQueue_FN    )	GetProcAddress(hMod, "clReleaseCommandQueue");
+		clReleaseKernel           = (clReleaseKernel_FN          )	GetProcAddress(hMod, "clReleaseKernel");
+		clReleaseMemObject        = (clReleaseMemObject_FN       )	GetProcAddress(hMod, "clReleaseMemObject");
+		clReleaseProgram          = (clReleaseProgram_FN         )	GetProcAddress(hMod, "clReleaseProgram");
+		clReleaseContext          = (clReleaseContext_FN         )	GetProcAddress(hMod, "clReleaseContext");
+		clReleaseDevice           = (clReleaseDevice_FN          )	GetProcAddress(hMod, "clReleaseDevice");
+	}
+
+private:
+	HMODULE hMod;
+};
+
+init_cl_functions init;
+
+#else
+#define CL_RUNTIME_EXPORT
+#define CL	cl
+#endif
+
 class clMainPrivate
 {
 public:
@@ -54,10 +178,10 @@ bool clMainPrivate::init(int type)
     if(type == clMainObject::CPU)
         dev = CL_DEVICE_TYPE_CPU;
 
-    ret = clGetPlatformIDs(1, &platform, &num_platforms);
-    ret = clGetDeviceIDs(platform, dev, 1, &device_id, &num_devices);
-    context = clCreateContext(nullptr, 1, &device_id, nullptr, nullptr, &ret);
-    command_queue = clCreateCommandQueue(context, device_id, 0, &ret);
+	ret = CL::clGetPlatformIDs(1, &platform, &num_platforms);
+	ret = CL::clGetDeviceIDs(platform, dev, 1, &device_id, &num_devices);
+	context = CL::clCreateContext(nullptr, 1, &device_id, nullptr, nullptr, &ret);
+	command_queue = CL::clCreateCommandQueue(context, device_id, 0, &ret);
 
     m_isInit = ret == 0;
 
@@ -67,7 +191,7 @@ bool clMainPrivate::init(int type)
 bool clMainPrivate::run(cl_kernel kernel, uint32_t work_dim, size_t works_count[])
 {
     cl_int ret;
-    ret = clEnqueueNDRangeKernel(command_queue, kernel, work_dim, nullptr, works_count,
+	ret = CL::clEnqueueNDRangeKernel(command_queue, kernel, work_dim, nullptr, works_count,
                                      nullptr, 0, nullptr, nullptr);
 
 	clFlush(command_queue);
@@ -92,7 +216,7 @@ public:
 
         ~Mem(){
             if(memobj){
-                clReleaseMemObject(memobj);
+				CL::clReleaseMemObject(memobj);
             }
         }
 
@@ -114,7 +238,7 @@ public:
             break;
             }
 
-            memobj = clCreateBuffer(context, flags, len, nullptr, &ret);
+			memobj = CL::clCreateBuffer(context, flags, len, nullptr, &ret);
             return ret == 0;
         }
     };
@@ -133,15 +257,15 @@ public:
     ~clProgramPrivate(){
 
         for(cl_kernel kernel: m_kernels){
-            clReleaseKernel(kernel);
+			CL::clReleaseKernel(kernel);
         }
         if(program)
-            clReleaseProgram(program);
+			CL::clReleaseProgram(program);
     }
 
     bool build(cl_device_id device_id){
         cl_int ret;
-        ret = clBuildProgram(program, 1, &device_id, nullptr, nullptr, nullptr);
+		ret = CL::clBuildProgram(program, 1, &device_id, nullptr, nullptr, nullptr);
 
         size_t log_size = 0;
 
@@ -164,13 +288,13 @@ public:
 
         const char *c_cmd[] = {source.c_str()};
         size_t len[] = {source.length()};
-        program = clCreateProgramWithSource(context, 1, c_cmd, len, &ret);
+		program = CL::clCreateProgramWithSource(context, 1, c_cmd, len, &ret);
         return ret == 0;
     }
 
     clKernel createKernel(const std::string& kern){
         cl_int ret;
-        cl_kernel kernel = clCreateKernel(program, kern.c_str(), &ret);
+		cl_kernel kernel = CL::clCreateKernel(program, kern.c_str(), &ret);
         m_kernels.push_back(kernel);
         return m_kernels.size() - 1;
     }
@@ -191,25 +315,25 @@ public:
         cl_int ret;
         PMem mem = m_memobjs[buffer];
         cl_kernel kernel = m_kernels[k];
-        ret = clSetKernelArg(kernel, index, sizeof(cl_mem), &mem->memobj);
+		ret = CL::clSetKernelArg(kernel, index, sizeof(cl_mem), &mem->memobj);
         return ret == 0;
     }
 	bool setArg(clKernel k, uint32_t index, int value){
         cl_int ret;
         cl_kernel kernel = m_kernels[k];
-        ret = clSetKernelArg(kernel, index, sizeof(int), &value);
+		ret = CL::clSetKernelArg(kernel, index, sizeof(int), &value);
         return ret == 0;
     }
 	bool setArg(clKernel k, uint32_t index, float value){
         cl_int ret;
         cl_kernel kernel = m_kernels[k];
-        ret = clSetKernelArg(kernel, index, sizeof(float), &value);
+		ret = CL::clSetKernelArg(kernel, index, sizeof(float), &value);
         return ret == 0;
     }
 	bool setArg(clKernel k, uint32_t index, double value){
         cl_int ret;
         cl_kernel kernel = m_kernels[k];
-        ret = clSetKernelArg(kernel, index, sizeof(double), &value);
+		ret = CL::clSetKernelArg(kernel, index, sizeof(double), &value);
         return ret == 0;
     }
 
@@ -218,7 +342,7 @@ public:
 
         PMem mem = m_memobjs[buffer];
 
-        ret = clEnqueueWriteBuffer(command_queue, mem->memobj, CL_TRUE, 0, mem->size,
+		ret = CL::clEnqueueWriteBuffer(command_queue, mem->memobj, CL_TRUE, 0, mem->size,
                                    data.data(), 0, nullptr, nullptr);
         return ret == 0;
     }
@@ -230,7 +354,7 @@ public:
 
         data.resize(mem->size);
 
-        ret = clEnqueueReadBuffer(command_queue, mem->memobj, CL_TRUE, 0, mem->size,
+		ret = CL::clEnqueueReadBuffer(command_queue, mem->memobj, CL_TRUE, 0, mem->size,
                                    data.data(), 0, nullptr, nullptr);
         return ret == 0;
     }
@@ -240,7 +364,7 @@ public:
 
         PMem mem = m_memobjs[buffer];
 
-        ret = clEnqueueWriteBuffer(command_queue, mem->memobj, CL_TRUE, 0, mem->size,
+		ret = CL::clEnqueueWriteBuffer(command_queue, mem->memobj, CL_TRUE, 0, mem->size,
                                    data, 0, nullptr, nullptr);
         return ret == 0;
     }
@@ -250,7 +374,7 @@ public:
 
         PMem mem = m_memobjs[buffer];
 
-        ret = clEnqueueReadBuffer(command_queue, mem->memobj, CL_TRUE, 0, mem->size,
+		ret = CL::clEnqueueReadBuffer(command_queue, mem->memobj, CL_TRUE, 0, mem->size,
                                    data, 0, nullptr, nullptr);
         return ret == 0;
     }

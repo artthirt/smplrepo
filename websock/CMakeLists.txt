@@ -47,7 +47,12 @@ endif()
 set(SOURCES)
 
 if(HAVE_OPENCL)
-    find_package(OpenCL)
+
+	set(OpenCL_FOUND ON)
+	set(OpenCL_INCLUDE_DIRS "3rdparty/include/opencl/1.2")
+	set(OpenCL_LIBRARIES)
+
+	#find_package(OpenCL)
     if(OpenCL_FOUND)
         set(LIBS ${LIBS} ${OpenCL_LIBRARIES})
         add_definitions(-DUSE_OPENCL)

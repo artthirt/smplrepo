@@ -29,7 +29,7 @@ MainWindow::MainWindow(QWidget *parent)
 	ui->statusbar->addWidget(m_progressBar);
 	m_progressBar->hide();
 
-	connect(m_websock.get(), SIGNAL(sendImage(PImage)), ui->widgetFrame, SLOT(onReceiveImage(PImage)), Qt::QueuedConnection);
+    connect(m_websock.get(), SIGNAL(sendImage(P1Image)), ui->widgetFrame, SLOT(onReceiveImage(P1Image)), Qt::QueuedConnection);
 
 	connect(&m_timer, SIGNAL(timeout()), this, SLOT(onTimeout()));
 	m_timer.start(500);

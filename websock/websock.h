@@ -67,7 +67,7 @@ public:
 	QString fileName() const;
 
 signals:
-	void sendImage(PImage);
+    void sendImage(P1Image);
 
 public slots:
 	void onReadyRead();
@@ -85,14 +85,14 @@ private:
 		QByteArray data;
 		bool done = false;
 		bool h264 = false;
-		PImage image;
+        P1Image image;
 
 		std::unique_ptr<std::thread> thr;
 
 		Frame();
 		Frame(const QByteArray& data);
 		Frame(const Frame &frame);
-		Frame(const PImage& image);
+        Frame(const P1Image& image);
 		~Frame();
 
 		void start();

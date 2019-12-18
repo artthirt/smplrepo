@@ -436,53 +436,56 @@ bool WebSock::parseH264()
 
 void WebSock::createImage(AVFrame *picture)
 {
-#ifdef USE_CUDA
+//#ifdef USE_CUDA
 
-	PImage image = m_convertImageCu.createImage(picture);
+//	PImage image = m_convertImageCu.createImage(picture);
 
-#elif USE_OPENCL
+//#elif USE_OPENCL
 
-	PImage image = m_convertImage.createImage(picture);
+//    PImage image = m_convertImage.createImage(picture);
 
-#else
+//#else
 
-	PImage image = std::make_shared<QImage>(QImage(picture->width, picture->height, QImage::Format_ARGB32));
+//	PImage image = std::make_shared<QImage>(QImage(picture->width, picture->height, QImage::Format_ARGB32));
 
-//    saveImage(picture, "test.image");
+////    saveImage(picture, "test.image");
 
-	int numthr = omp_get_num_procs();
+//	int numthr = omp_get_num_procs();
 
-	if(numthr > 6)
-		omp_set_num_threads(numthr/2);
+//	if(numthr > 6)
+//		omp_set_num_threads(numthr/2);
 
-#pragma omp parallel for
-	for(int y = 0; y < picture->height; ++y){
-		uint8_t* il = &picture->data[0][y * picture->linesize[0]];
-		QRgb* sc = (QRgb*)image->scanLine(y);
-		for(int x = 0; x < picture->width; ++x){
-			uchar r = il[x];
-			sc[x] = r;
-		}
-	}
+//#pragma omp parallel for
+//	for(int y = 0; y < picture->height; ++y){
+//		uint8_t* il = &picture->data[0][y * picture->linesize[0]];
+//		QRgb* sc = (QRgb*)image->scanLine(y);
+//		for(int x = 0; x < picture->width; ++x){
+//			uchar r = il[x];
+//			sc[x] = r;
+//		}
+//	}
 
-#pragma omp parallel for
-	for(int y = 0; y < picture->height >> 1; ++y){
-		uint8_t* il1 = &picture->data[1][y * picture->linesize[1]];
-		uint8_t* il2 = &picture->data[2][y * picture->linesize[2]];
-		QRgb* sc1 = (QRgb*)image->scanLine((y << 1) + 0);
-		QRgb* sc2 = (QRgb*)image->scanLine((y << 1) + 1);
-		for(int x = 0; x < picture->width >> 1; ++x){
-			uchar g = 0, b = 0;
-			g = il1[x];
-			b = il2[x];
+//#pragma omp parallel for
+//	for(int y = 0; y < picture->height >> 1; ++y){
+//		uint8_t* il1 = &picture->data[1][y * picture->linesize[1]];
+//		uint8_t* il2 = &picture->data[2][y * picture->linesize[2]];
+//		QRgb* sc1 = (QRgb*)image->scanLine((y << 1) + 0);
+//		QRgb* sc2 = (QRgb*)image->scanLine((y << 1) + 1);
+//		for(int x = 0; x < picture->width >> 1; ++x){
+//			uchar g = 0, b = 0;
+//			g = il1[x];
+//			b = il2[x];
 
 
-			conv_yuv_to_rgb((uchar)sc1[(x << 1)], (uchar)sc1[(x << 1) + 1], g, b, sc1[(x << 1)], sc1[(x << 1) + 1]);
-			conv_yuv_to_rgb((uchar)sc2[(x << 1)], (uchar)sc2[(x << 1) + 1], g, b, sc2[(x << 1)], sc2[(x << 1) + 1]);
-		}
-	}
+//			conv_yuv_to_rgb((uchar)sc1[(x << 1)], (uchar)sc1[(x << 1) + 1], g, b, sc1[(x << 1)], sc1[(x << 1) + 1]);
+//			conv_yuv_to_rgb((uchar)sc2[(x << 1)], (uchar)sc2[(x << 1) + 1], g, b, sc2[(x << 1)], sc2[(x << 1) + 1]);
+//		}
+//	}
 
-#endif
+//#endif
+
+    P1Image image = std::make_shared<YUVImage>(YUVImage());
+    image->set(picture->width, picture->height, picture->data, picture->linesize);
 
 	if(m_frames.size() < MAX_BUFFERS){
 		m_mutex.lock();
@@ -521,7 +524,7 @@ WebSock::Frame::Frame(const WebSock::Frame &frame)
 	image = frame.image;
 }
 
-WebSock::Frame::Frame(const PImage &image)
+WebSock::Frame::Frame(const P1Image &image)
 {
 	this->image = image;
 	done = true;
@@ -545,7 +548,7 @@ void WebSock::Frame::encode()
 
 	QImageReader reader(stream.device(), "jpeg");
 
-	image.reset(new QImage(reader.read()));
+    //image.reset(new QImage(reader.read()));
 
 	done = true;
 }

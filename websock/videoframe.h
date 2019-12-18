@@ -35,10 +35,10 @@ signals:
 
 public slots:
     void onTimeout();
-	void onReceiveImage(const PImage& image);
+    void onReceiveImage(const P1Image& image);
 
 private:
-	PImage m_image;
+    P1Image m_image;
     bool m_is_update;
     bool m_is_tex_update;
     QTimer m_timer;
@@ -53,9 +53,13 @@ private:
 	bool m_rotateBy90;
 
     uint m_bindTex;
+    uint m_bindTexU;
+    uint m_bindTexV;
     int m_mvpInt;
     int m_vecInt;
     int m_texInt;
+    int m_texUInt;
+    int m_texVInt;
     int m_utexInt;
 
     float m_scale;

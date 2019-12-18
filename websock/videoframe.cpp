@@ -8,7 +8,7 @@
 VideoFrame::VideoFrame(QWidget *parent) : QGLWidget(parent)
 //  , m_camCapture(0)
 {
-	qRegisterMetaType<PImage>("PImage");
+    qRegisterMetaType<PImage>("P1Image");
 
 	setAutoFillBackground(false);
 	m_is_tex_update = false;
@@ -32,7 +32,7 @@ VideoFrame::~VideoFrame()
 
 void VideoFrame::setImage(const QImage &image)
 {
-	m_image = std::make_shared<QImage>(image);
+    //m_image = std::make_shared<QImage>(image);
 	m_is_tex_update = true;
 	m_is_update = true;
 }
@@ -66,7 +66,7 @@ void VideoFrame::onTimeout()
 {
 	if(m_is_update){
 		m_is_update = false;
-		generateTexture();
+        generateTexture();
 		update();
 	}
 
@@ -77,9 +77,9 @@ void VideoFrame::onTimeout()
 	}
 }
 
-void VideoFrame::onReceiveImage(const PImage &image)
+void VideoFrame::onReceiveImage(const P1Image &image)
 {
-	m_image = image;
+    m_image = image;
 	m_counter_fps++;
 
 	//m_image.save("1.bmp");
@@ -116,25 +116,36 @@ void VideoFrame::generateTexture()
 		return;
 	m_is_tex_update = false;
 
-	int t = GL_RGB;
-	if(m_image->format() == QImage::Format_ARGB32 || m_image->format() == QImage::Format_RGB32)
-		t = GL_RGBA;
+//	int t = GL_RGB;
+//	if(m_image->format() == QImage::Format_ARGB32 || m_image->format() == QImage::Format_RGB32)
+//		t = GL_RGBA;
 
 	glBindTexture(GL_TEXTURE_2D, m_bindTex);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-	if(m_prev_width != m_image->width() || m_prev_height != m_image->height() || m_prev_type != t){
-		m_prev_type = t;
+    if(m_prev_width != m_image->width() || m_prev_height != m_image->height()){
 		m_prev_width = m_image->width();
 		m_prev_height = m_image->height();
-		glTexImage2D(GL_TEXTURE_2D, 0, t, m_image->width(), m_image->height(),
-					 0, t, GL_UNSIGNED_BYTE, m_image->bits());
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, m_image->width(), m_image->height(),
+                     0, GL_LUMINANCE, GL_UNSIGNED_BYTE, m_image->Y.data());
 	}else{
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_image->width(), m_image->height(),
-						t, GL_UNSIGNED_BYTE, m_image->bits());
+                        GL_LUMINANCE, GL_UNSIGNED_BYTE, m_image->Y.data());
 	}
+
+    glBindTexture(GL_TEXTURE_2D, m_bindTexU);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, m_image->width()/2, m_image->height()/2,
+                 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, m_image->U.data());
+
+    glBindTexture(GL_TEXTURE_2D, m_bindTexV);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, m_image->width()/2, m_image->height()/2,
+                 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, m_image->V.data());
 }
 
 inline void qmat2float(const QMatrix4x4& mat, float* data, int len = 16)
@@ -192,7 +203,17 @@ void VideoFrame::drawImage()
 	glUniformMatrix4fv(m_mvpInt, 1, false, mvp);
 
 	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, m_bindTex);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, m_bindTex);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, m_bindTexU);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, m_bindTexV);
+
+    glUniform1i(m_utexInt, 0);
+    glUniform1i(m_texUInt, 1);
+    glUniform1i(m_texVInt, 2);
 
 	glEnableVertexAttribArray(m_vecInt);
 	glEnableVertexAttribArray(m_texInt);
@@ -216,7 +237,9 @@ void VideoFrame::initializeGL()
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glGenTextures(1, &m_bindTex);
-	//m_bindTex = 1;
+    glGenTextures(1, &m_bindTexU);
+    glGenTextures(1, &m_bindTexV);
+    //m_bindTex = 1;
 
 	m_shpr.addShaderFromSourceCode(QGLShader::Vertex,
 								   "attribute vec3 aVec;\n"
@@ -231,16 +254,47 @@ void VideoFrame::initializeGL()
 								   "//precision highp float;\n"
 								   "varying vec2 vTex;\n"
 								   "uniform sampler2D uTex;\n"
-								   "void main(){\n"
-								   "    gl_FragColor = texture2D(uTex, vTex).bgra;\n"
+                                   "uniform sampler2D uUTex;\n"
+                                   "uniform sampler2D uVTex;\n"
+                                   "float clip(float v)\n"
+                                   "{\n"
+                                   "    if(v > 1) return 1;\n"
+                                   "    if(v < 0)   return 0;\n"
+                                   "    return v;\n"
+                                   "}\n"
+                                   "float3 getRgb(float3 yuv)\n"
+                                   "{\n"
+                                   "    float3 vec;\n"
+                                   "\n"
+                                   "    vec.x = yuv.x + 1.402 * (yuv.z - 0.5);\n"
+                                   "    vec.y = yuv.x - 0.344 * (yuv.y - 0.5) - 0.714 * (yuv.z - 0.5);\n"
+                                   "    vec.z = yuv.x + 1.772 * (yuv.y - 0.5);\n"
+
+                                   "    vec.x = clip(vec.x);\n"
+                                   "    vec.y = clip(vec.y);\n"
+                                   "    vec.z = clip(vec.z);"
+                                   "    return vec;\n"
+                                   "}\n"
+                                   "void main(){\n"
+                                   "    float Y = (float)texture2D(uTex, vTex).x;\n"
+                                   "    float U = (float)texture2D(uUTex, vTex).x;\n"
+                                   "    float V = (float)texture2D(uVTex, vTex).x;\n"
+                                   "    float3 c = getRgb(vec3(Y, U, V));\n"
+                                   "    gl_FragColor = vec4(c, 1);\n"
 								   "}");
-	m_shpr.link();
-	m_shpr.bind();
+    if(!m_shpr.link()){
+        qDebug("Link error: %s", m_shpr.log().toLatin1().data());
+    }
+    if(!m_shpr.bind()){
+        qDebug("Bind error: %s", m_shpr.log().toLatin1().data());
+    }
 
 	m_vecInt = m_shpr.attributeLocation("aVec");
 	m_texInt = m_shpr.attributeLocation("aTex");
 	m_mvpInt = m_shpr.uniformLocation("uMvp");
 	m_utexInt = m_shpr.uniformLocation("uTex");
+    m_texUInt = m_shpr.uniformLocation("uUTex");
+    m_texVInt = m_shpr.uniformLocation("uVTex");
 
 	addPt(m_vertexBuffer, -1, -1, 0);
 	addPt(m_vertexBuffer, -1, 1, 0);

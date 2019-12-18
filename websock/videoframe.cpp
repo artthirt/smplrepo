@@ -120,32 +120,37 @@ void VideoFrame::generateTexture()
 //	if(m_image->format() == QImage::Format_ARGB32 || m_image->format() == QImage::Format_RGB32)
 //		t = GL_RGBA;
 
-	glBindTexture(GL_TEXTURE_2D, m_bindTex);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
     if(m_prev_width != m_image->width() || m_prev_height != m_image->height()){
 		m_prev_width = m_image->width();
 		m_prev_height = m_image->height();
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, m_image->width(), m_image->height(),
+		glBindTexture(GL_TEXTURE_2D, m_bindTex);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, m_image->width(), m_image->height(),
                      0, GL_LUMINANCE, GL_UNSIGNED_BYTE, m_image->Y.data());
+		glBindTexture(GL_TEXTURE_2D, m_bindTexU);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, m_image->width()/2, m_image->height()/2,
+					 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, m_image->U.data());
+
+		glBindTexture(GL_TEXTURE_2D, m_bindTexV);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, m_image->width()/2, m_image->height()/2,
+					 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, m_image->V.data());
 	}else{
+		glBindTexture(GL_TEXTURE_2D, m_bindTex);
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_image->width(), m_image->height(),
                         GL_LUMINANCE, GL_UNSIGNED_BYTE, m_image->Y.data());
+		glBindTexture(GL_TEXTURE_2D, m_bindTexU);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_image->width()/2, m_image->height()/2,
+						GL_LUMINANCE, GL_UNSIGNED_BYTE, m_image->U.data());
+		glBindTexture(GL_TEXTURE_2D, m_bindTexV);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_image->width()/2, m_image->height()/2,
+						GL_LUMINANCE, GL_UNSIGNED_BYTE, m_image->V.data());
 	}
 
-    glBindTexture(GL_TEXTURE_2D, m_bindTexU);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, m_image->width()/2, m_image->height()/2,
-                 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, m_image->U.data());
-
-    glBindTexture(GL_TEXTURE_2D, m_bindTexV);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, m_image->width()/2, m_image->height()/2,
-                 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, m_image->V.data());
 }
 
 inline void qmat2float(const QMatrix4x4& mat, float* data, int len = 16)

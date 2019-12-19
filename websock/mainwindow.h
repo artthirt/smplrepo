@@ -6,6 +6,7 @@
 #include <QTimer>
 
 #include "websock.h"
+#include "tcpsocket.h"
 #include "testsender.h"
 
 QT_BEGIN_NAMESPACE
@@ -41,6 +42,7 @@ private:
 	QTimer m_timer;
 
 	std::unique_ptr<WebSock> m_websock;
+	std::unique_ptr<tcpsocket> m_tcpsocket;
     std::unique_ptr<TestSender> m_testSender;
 };
 #endif // MAINWINDOW_H

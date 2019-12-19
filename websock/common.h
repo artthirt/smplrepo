@@ -63,11 +63,51 @@ public:
     enum{EVENT = QEvent::User + 100};
 
     QByteArray data;
+	int tp = 0;
 
     EventTest(const QByteArray& data): QEvent((Type)EVENT){
         this->data = data;
     }
 
+	EventTest(const QByteArray& data, int tp): QEvent((Type)EVENT){
+		this->data = data;
+		this->tp = tp;
+	}
+};
+
+namespace tcp_packet{
+
+/// Tcp packet
+/// "VIDEO"|t:uchar|size:uint|data|"PACK"
+const static char* begin_packet	= "VIDEO";
+const static int len_begin_packet	= sizeof(begin_packet)/sizeof(*begin_packet);
+const static char* end_packet		= "PACK";
+const static int len_end_packet	= sizeof(end_packet)/sizeof(*end_packet);
+
+const static uchar type_video		= 1;
+const static uchar type_control	= 2;
+const static uchar type_end		= 10;
+
+union UInt{
+	uchar uc[4];
+	uint  ui;
+};
+
+inline uint getUint(const char* data)
+{
+	UInt d;
+	d.uc[0] = data[0];
+	d.uc[1] = data[1];
+	d.uc[2] = data[2];
+	d.uc[3] = data[3];
+	return d.ui;
+}
+
+inline UInt getUint(uint val){
+	UInt d;
+	d.ui = val;
+	return d;
+}
 
 };
 

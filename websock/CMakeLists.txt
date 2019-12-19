@@ -93,9 +93,11 @@ add_executable(websock main.cpp
 	videoframe.ui
 	DataStream.cpp
 	testsender.cpp
+	tcpserver.cpp
+	tcpsocket.cpp
 	dialogsetfilename.cpp
-        dialogsetfilename.ui
-        resource.qrc)
+	dialogsetfilename.ui
+	resource.qrc)
 
 if(HAVE_CUDA)
 	set_property(TARGET websock

@@ -15,8 +15,12 @@ MainWindow::MainWindow(QWidget *parent)
 	m_websock->moveToThread(m_websock.get());
 	m_websock->start();
 
+	m_tcpsocket.reset(new tcpsocket);
+	m_tcpsocket->setOwner(m_websock.get());
+	m_tcpsocket->connectToHost(QHostAddress("127.0.0.1"), 1443);
+
     m_testSender.reset(new TestSender());
-    m_testSender->startThread();
+	m_testSender->startThread();
 
     m_testSender->setFilename("test.bin");
     m_testSender->setSender(m_websock.get());
@@ -43,7 +47,8 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
-    m_testSender->setSender(nullptr);
+	m_tcpsocket.reset();
+	m_testSender->setSender(nullptr);
 
 	delete ui;
 }

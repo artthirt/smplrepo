@@ -36,7 +36,7 @@ bool TestSender::isOpenFile()
 
 float TestSender::progress() const
 {
-	if(!m_file.isOpen())
+	if(!m_file.isOpen() || m_file.size() == 0)
 		return 0;
 	float d = (float)m_file.pos()/m_file.size();
 	return d;

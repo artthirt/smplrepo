@@ -268,6 +268,7 @@ void WebSock::run()
 	exec();
 
 	m_sock.reset();
+	m_timer.reset();
 }
 
 void WebSock::tryParseData(const QByteArray &data)
@@ -498,7 +499,9 @@ bool WebSock::event(QEvent *ev)
 {
 	if(ev->type() == EventTest::EVENT){
 		EventTest *et = (EventTest*)ev;
-		m_framesH264.push(et->data);
+		if(m_framesH264.size() < MAX_BUFFERS){
+			m_framesH264.push(et->data);
+		}
 		return true;
 	}
 	return QThread::event(ev);

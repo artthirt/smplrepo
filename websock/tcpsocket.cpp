@@ -51,8 +51,8 @@ tcpsocket::tcpsocket(QObject *parent) : QThread(parent)
 
 	connect(this, SIGNAL(connectTo()), this, SLOT(onConnectTo()), Qt::QueuedConnection);
 
-	moveToThread(this);
-	start();
+//	moveToThread(this);
+//	start();
 }
 
 tcpsocket::~tcpsocket()
@@ -69,7 +69,7 @@ void tcpsocket::setSocket(QTcpSocket *sock)
 	setsockopt(m_socket->socketDescriptor(), SOL_SOCKET, SO_RCVBUF, (char*)&buf, sizeof(buf));
 
 	connect(m_socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(onError(QAbstractSocket::SocketError)));
-	connect(m_socket, SIGNAL(connected()), this, SLOT(onConnect()), Qt::QueuedConnection);
+	connect(m_socket, SIGNAL(connected()), this, SLOT(onConnect()));
 	connect(m_socket, SIGNAL(disconnected()), this, SLOT(onDisconnect()));
 	connect(m_socket, SIGNAL(readyRead()), this, SLOT(onReadyRead()));
 
@@ -101,6 +101,9 @@ void tcpsocket::sendPacket(const QByteArray &data)
 
 void tcpsocket::connectToHost(const QHostAddress &addr, ushort port)
 {
+	moveToThread(this);
+	start();
+
 	m_socket = new QTcpSocket;
 	connect(m_socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(onError(QAbstractSocket::SocketError)), Qt::QueuedConnection);
 	connect(m_socket, SIGNAL(connected()), this, SLOT(onConnect()), Qt::QueuedConnection);
@@ -168,6 +171,7 @@ void tcpsocket::onDisconnect()
 
 void tcpsocket::onError(QAbstractSocket::SocketError error)
 {
+	m_isConnected = false;
 	if(m_connectedState){
 		m_tryReconnect = true;
 		if(m_prevError == error)
@@ -303,7 +307,11 @@ void tcpsocket::writeNextPacket()
 	stream.writeRawData(pkt.data(), pkt.size());
 	stream.writeRawData(tcp_packet::end_packet, tcp_packet::len_end_packet);
 
-	m_socket->write(data);
+	{
+		m_socket->write(data);
+		m_socket->waitForBytesWritten();
+	}
+
 	m_mutex.lock();
 	m_packets.pop_front();
 	m_mutex.unlock();
@@ -313,6 +321,7 @@ void tcpsocket::writeNextPacket()
 
 void tcpsocket::sendPacketToOwner()
 {
-	if(m_owner)
+	if(m_owner){
 		QCoreApplication::postEvent(m_owner, new EventTest(m_packet, m_type));
+	}
 }

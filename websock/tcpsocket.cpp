@@ -6,6 +6,8 @@
 
 #include <QCoreApplication>
 
+#include <algorithm>
+
 #ifdef _MSC_VER
 #include <WinSock2.h>
 #else
@@ -24,9 +26,7 @@ enum{
 
 bool check_string(char* data, char* string, int len)
 {
-	int i = 0;
-	while(i++ < len && *data++ == *string++){}
-	return i == len + 1;
+    return strncmp(data, string, len) == 0;
 }
 
 tcpsocket::tcpsocket(QObject *parent) : QThread(parent)
@@ -65,7 +65,7 @@ void tcpsocket::setSocket(QTcpSocket *sock)
 {
 	m_socket = sock;
 
-	int buf = 7 * 1024 * 1024;
+    int buf = 300 * 1024;
 	setsockopt(m_socket->socketDescriptor(), SOL_SOCKET, SO_RCVBUF, (char*)&buf, sizeof(buf));
 
 	connect(m_socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(onError(QAbstractSocket::SocketError)));
@@ -76,6 +76,7 @@ void tcpsocket::setSocket(QTcpSocket *sock)
 	printf("new connect %s\r", sock->peerAddress().toString().toLatin1().data());
 
 	m_isConnected = true;
+    start();
 }
 
 void tcpsocket::setOwner(QObject *owner)
@@ -209,7 +210,9 @@ void tcpsocket::parsePacket(const QByteArray &data)
 	while(m_indexPos < size){
 		switch (m_state) {
 			case M_BEGIN:
-				if(m_buffer[m_indexPos] == tcp_packet::begin_packet[0]){
+                if(m_indexPos + 2  < size && m_buffer[m_indexPos] == tcp_packet::begin_packet[0]
+                        && m_buffer[m_indexPos + 1] == tcp_packet::begin_packet[1]
+                        && m_buffer[m_indexPos + 2] == tcp_packet::begin_packet[2]){
 					m_state = M_BEGIN_CHECK;
 				}else
 					m_indexPos++;
@@ -217,7 +220,8 @@ void tcpsocket::parsePacket(const QByteArray &data)
 			case M_BEGIN_CHECK:{
 				if(m_indexPos + tcp_packet::len_begin_packet >= size)
 					return;
-				if(check_string((char*)&m_buffer.data()[m_indexPos], (char*)tcp_packet::begin_packet, tcp_packet::len_begin_packet)){
+                char *dt = (char*)&m_buffer.data()[m_indexPos];
+                if(check_string(dt, (char*)tcp_packet::begin_packet, tcp_packet::len_begin_packet)){
 					m_state = M_TYPE;
 					m_indexPos += tcp_packet::len_begin_packet;
 				}else{
@@ -263,7 +267,8 @@ void tcpsocket::parsePacket(const QByteArray &data)
 				if(m_indexPos + tcp_packet::len_end_packet >= size){
 					return;
 				}
-				if(check_string((char*)&m_buffer.data()[m_indexPos], (char*)tcp_packet::end_packet, tcp_packet::len_end_packet)){
+                char *dt = (char*)&m_buffer.data()[m_indexPos];
+                if(check_string(dt, (char*)tcp_packet::end_packet, tcp_packet::len_end_packet)){
 					m_packet.resize(m_dataSize);
 					std::copy(&m_buffer.data()[m_dataBegin], &m_buffer.data()[m_dataBegin] + m_dataSize, m_packet.data());
 					m_buffer.remove(0, m_indexPos);

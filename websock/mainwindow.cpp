@@ -5,6 +5,8 @@
 
 #include "dialogsetfilename.h"
 
+#include "dialogtcphost.h"
+
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
 	, ui(new Ui::MainWindow)
@@ -85,6 +87,12 @@ void MainWindow::onTimeout()
 	}else{
 		m_progressBar->hide();
 	}
+
+	QString str = QString("Connecting: %1; host %2:%3")
+			.arg(m_tcpsocket->isConnecting())
+			.arg(m_tcpsocket->connectingHost().toString())
+			.arg(m_tcpsocket->connectingPort());
+	ui->statusbar->showMessage(str);
 }
 
 void MainWindow::on_actionSet_Record_FileName_triggered()
@@ -101,4 +109,18 @@ void MainWindow::on_actionSet_Record_FileName_triggered()
 void MainWindow::on_actionStart_record_triggered(bool checked)
 {
 	m_websock->setRecord(checked);
+}
+
+void MainWindow::on_actionSet_Host_for_Web_Camera_triggered()
+{
+	DialogTcpHost dlg;
+
+	QHostAddress host = m_tcpsocket->connectingHost();
+	ushort port = m_tcpsocket->connectingPort();
+
+	dlg.setHost(host.toString(), port);
+
+	if(dlg.exec()){
+		m_tcpsocket->newHost(QHostAddress(dlg.host()), dlg.port());
+	}
 }

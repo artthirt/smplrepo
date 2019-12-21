@@ -37,7 +37,14 @@
     <addaction name="actionStart_test"/>
     <addaction name="actionStart_record"/>
    </widget>
+   <widget class="QMenu" name="menuOptions">
+    <property name="title">
+     <string>Options</string>
+    </property>
+    <addaction name="actionSet_Host_for_Web_Camera"/>
+   </widget>
    <addaction name="menuTest"/>
+   <addaction name="menuOptions"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QToolBar" name="toolBar">
@@ -79,6 +86,11 @@
   <action name="actionSet_Record_FileName">
    <property name="text">
     <string>Set Record File Name</string>
+   </property>
+  </action>
+  <action name="actionSet_Host_for_Web_Camera">
+   <property name="text">
+    <string>Set Host for Web Camera</string>
    </property>
   </action>
  </widget>

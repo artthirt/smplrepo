@@ -1,5 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>cl/convert.cl</file>
+        <file>gl/frame.frag</file>
+        <file>gl/frame.vert</file>
     </qresource>
 </RCC>

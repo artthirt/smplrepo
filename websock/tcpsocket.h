@@ -24,12 +24,22 @@ public:
 
 	void connectToHost(const QHostAddress& addr, ushort port);
 
+	void newHost(const QHostAddress& addr, ushort port);
+
+	QHostAddress connectingHost() const;
+	ushort connectingPort() const;
+
 	void abort();
+
+	bool isConnecting() const;
 
 	QTcpSocket *socket();
 
 signals:
 	void connectTo();
+	void s_abort();
+	void s_aborted();
+	void s_newHost();
 
 public slots:
 	void onReadyRead();
@@ -38,6 +48,8 @@ public slots:
 	void onConnect();
 	void onDisconnect();
 	void onError(QAbstractSocket::SocketError error);
+	void onAbort();
+	void onNewHost();
 
 	void sendPacket(const QByteArray& data);
 

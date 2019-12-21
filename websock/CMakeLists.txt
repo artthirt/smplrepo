@@ -97,6 +97,8 @@ add_executable(websock main.cpp
 	tcpsocket.cpp
 	dialogsetfilename.cpp
 	dialogsetfilename.ui
+    dialogtcphost.cpp
+    dialogtcphost.ui
 	resource.qrc)
 
 if(HAVE_CUDA)

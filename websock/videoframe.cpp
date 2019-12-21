@@ -231,6 +231,17 @@ void VideoFrame::drawImage()
 	glDisable(GL_TEXTURE_2D);
 }
 
+QString loadFile(const QString &fn)
+{
+	QFile f(fn);
+	if(f.open(QIODevice::ReadOnly)){
+		QByteArray str = f.readAll();
+		f.close();
+
+		return str;
+	}
+	return "";
+}
 
 void VideoFrame::initializeGL()
 {
@@ -246,37 +257,11 @@ void VideoFrame::initializeGL()
     glGenTextures(1, &m_bindTexV);
     //m_bindTex = 1;
 
-	m_shpr.addShaderFromSourceCode(QGLShader::Vertex,
-								   "attribute vec3 aVec;\n"
-								   "attribute vec2 aTex;\n"
-								   "uniform mat4 uMvp;\n"
-								   "varying vec2 vTex;\n"
-								   "void main(){\n"
-								   "    gl_Position = uMvp * vec4(aVec, 1);\n"
-								   "    vTex = aTex;\n"
-								   "}");
-	m_shpr.addShaderFromSourceCode(QGLShader::Fragment,
-								   "//precision highp float;\n"
-								   "varying vec2 vTex;\n"
-								   "uniform sampler2D uTex;\n"
-                                   "uniform sampler2D uUTex;\n"
-                                   "uniform sampler2D uVTex;\n"
-                                   "float3 getRgb(float3 yuv)\n"
-                                   "{\n"
-                                   "    float3 vec;\n"
-                                   "\n"
-                                   "    vec.x = yuv.x + 1.402 * (yuv.z - 0.5);\n"
-                                   "    vec.y = yuv.x - 0.344 * (yuv.y - 0.5) - 0.714 * (yuv.z - 0.5);\n"
-                                   "    vec.z = yuv.x + 1.772 * (yuv.y - 0.5);\n"
-                                   "    return vec;\n"
-                                   "}\n"
-                                   "void main(){\n"
-                                   "    float Y = (float)texture2D(uTex, vTex).x;\n"
-                                   "    float U = (float)texture2D(uUTex, vTex).x;\n"
-                                   "    float V = (float)texture2D(uVTex, vTex).x;\n"
-                                   "    float3 c = getRgb(vec3(Y, U, V));\n"
-                                   "    gl_FragColor = vec4(c, 1);\n"
-								   "}");
+	QString vertex		= loadFile(":/gl/frame.vert");
+	QString fragment	= loadFile(":/gl/frame.frag");
+
+	m_shpr.addShaderFromSourceCode(QGLShader::Vertex, vertex);
+	m_shpr.addShaderFromSourceCode(QGLShader::Fragment, fragment);
     if(!m_shpr.link()){
         qDebug("Link error: %s", m_shpr.log().toLatin1().data());
     }

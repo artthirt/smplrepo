@@ -36,6 +36,8 @@ private slots:
 
 	void on_actionStart_record_triggered(bool checked);
 
+	void on_actionSet_Host_for_Web_Camera_triggered();
+
 private:
 	Ui::MainWindow *ui;
 	QProgressBar *m_progressBar;

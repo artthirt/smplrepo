@@ -50,6 +50,8 @@ tcpsocket::tcpsocket(QObject *parent) : QThread(parent)
 	qRegisterMetaType<QAbstractSocket::SocketError>("QAbstractSocket::SocketError");
 
 	connect(this, SIGNAL(connectTo()), this, SLOT(onConnectTo()), Qt::QueuedConnection);
+	connect(this, SIGNAL(s_abort()), this, SLOT(onAbort()), Qt::QueuedConnection);
+	connect(this, SIGNAL(s_newHost()), this, SLOT(onNewHost()), Qt::QueuedConnection);
 
 //	moveToThread(this);
 //	start();
@@ -121,12 +123,32 @@ void tcpsocket::connectToHost(const QHostAddress &addr, ushort port)
 	emit connectTo();
 }
 
+void tcpsocket::newHost(const QHostAddress &addr, ushort port)
+{
+	m_ConnectingHost = addr;
+	m_ConnectingPort = port;
+
+	emit s_newHost();
+}
+
+QHostAddress tcpsocket::connectingHost() const
+{
+	return m_ConnectingHost;
+}
+
+ushort tcpsocket::connectingPort() const
+{
+	return m_ConnectingPort;
+}
+
 void tcpsocket::abort()
 {
-	if(m_socket){
-		m_socket->abort();
-		m_socket->close();
-	}
+	emit s_abort();
+}
+
+bool tcpsocket::isConnecting() const
+{
+	return m_isConnected;
 }
 
 QTcpSocket *tcpsocket::socket()
@@ -181,6 +203,27 @@ void tcpsocket::onError(QAbstractSocket::SocketError error)
 			printf("Error to connect %d           \n", error);
 		m_prevError = error;
 	}
+}
+
+void tcpsocket::onAbort()
+{
+	if(m_socket){
+		m_socket->abort();
+		m_socket->close();
+	}
+	emit s_aborted();
+}
+
+void tcpsocket::onNewHost()
+{
+	if(m_isConnected){
+		if(m_socket){
+			m_socket->abort();
+			m_socket->close();
+		}
+	}
+	if(m_socket)
+		m_socket->connectToHost(m_ConnectingHost, m_ConnectingPort);
 }
 
 void tcpsocket::run()

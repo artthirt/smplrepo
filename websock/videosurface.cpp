@@ -65,7 +65,7 @@ bool VideoSurface::present(const QVideoFrame &frame)
 			c_frame.bytesPerLine(),
 			imageFormat);
 
-    emit sendImage(image.copy());
+    emit sendImage(image.mirrored(true, true));
 
 	return true;
 }

@@ -173,9 +173,12 @@ void VideoFrame::generateTextureQ()
 		return;
 	m_is_tex_update_q = false;
 
-//	int t = GL_RGB;
-//	if(m_image->format() == QImage::Format_ARGB32 || m_image->format() == QImage::Format_RGB32)
-//		t = GL_RGBA;
+    int t = GL_RGB;
+    int tt = 3;
+    if(m_qimage.format() == QImage::Format_ARGB32 || m_qimage.format() == QImage::Format_RGB32){
+        t = GL_RGBA;
+        tt = 4;
+    }
 
 	if(m_prev_width != m_qimage.width() || m_prev_height != m_qimage.height()){
 		m_prev_width = m_qimage.width();
@@ -183,12 +186,12 @@ void VideoFrame::generateTextureQ()
 		glBindTexture(GL_TEXTURE_2D, m_bindTex);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_qimage.width(), m_qimage.height(),
-					 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, m_qimage.bits());
+        glTexImage2D(GL_TEXTURE_2D, 0, tt, m_qimage.width(), m_qimage.height(),
+                     0, t, GL_UNSIGNED_BYTE, m_qimage.bits());
 	}else{
 		glBindTexture(GL_TEXTURE_2D, m_bindTex);
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_qimage.width(), m_qimage.height(),
-						GL_LUMINANCE, GL_UNSIGNED_BYTE, m_qimage.bits());
+                        t, GL_UNSIGNED_BYTE, m_qimage.bits());
 	}
 }
 
@@ -222,10 +225,10 @@ void VideoFrame::drawImage()
 
 	m_model.scale(m_scale, m_scale, 1);
 
-	if(!m_image.get() || m_image->isNull())
+    if((m_isYUV && (!m_image.get() || m_image->isNull())) && (!m_isYUV && m_qimage.isNull()))
 		return;
 
-	float arim = (float)m_image->width()/m_image->height();
+    float arim = m_isYUV && m_image.get()? (float)m_image->width()/m_image->height() : (float)m_qimage.width()/m_qimage.height();
 	float ar = (float)width() / height();
 
 	if(m_rotateBy90){

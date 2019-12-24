@@ -36,12 +36,15 @@ signals:
 public slots:
     void onTimeout();
     void onReceiveImage(const P1Image& image);
+	void onReceiveImage(const QImage& image);
 
 private:
     P1Image m_image;
+	QImage m_qimage;
     bool m_is_update;
     bool m_is_tex_update;
-    QTimer m_timer;
+	bool m_is_tex_update_q = false;
+	QTimer m_timer;
 	QTime m_time_fps;
 	float m_fps;
 	uint m_counter_fps;
@@ -62,10 +65,18 @@ private:
     int m_texVInt;
     int m_utexInt;
 
+	int m_mvpRgbInt;
+	int m_vecRgbInt;
+	int m_texRgbInt;
+	int m_utexRgbInt;
+
+	bool m_isYUV = true;
+
     float m_scale;
     QVector2D m_offset;
 
     QGLShaderProgram m_shpr;
+	QGLShaderProgram m_shpr_rgb;
 
     QMatrix4x4 m_mvp;
     QMatrix4x4 m_proj;
@@ -78,7 +89,8 @@ private:
 
     void setViewport(float w, float h);
     void generateTexture();
-    void drawImage();
+	void generateTextureQ();
+	void drawImage();
 
     // QGLWidget interface
 protected:

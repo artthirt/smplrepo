@@ -39,6 +39,7 @@ endif()
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 find_package(Qt5 COMPONENTS Network REQUIRED)
 find_package(Qt5 COMPONENTS OpenGL REQUIRED)
+find_package(Qt5 COMPONENTS Multimedia REQUIRED)
 
 if(HAVE_MMX)
     add_definitions(-DUSE_MMX)
@@ -85,6 +86,7 @@ endif()
 
 add_executable(websock main.cpp
         ${SOURCES}
+	common.cpp
 	websock.cpp
 	mainwindow.cpp
 	mainwindow.ui
@@ -99,6 +101,8 @@ add_executable(websock main.cpp
 	dialogsetfilename.ui
     dialogtcphost.cpp
     dialogtcphost.ui
+	camerastream.cpp
+	videosurface.cpp
 	resource.qrc)
 
 if(HAVE_CUDA)
@@ -132,7 +136,7 @@ find_library(AVUTIL avutil HINTS        ${DEFAULT_FFMPEGDIR})
 
 set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -fPIC)
 
-set(LIBS ${LIBS} Qt5::Core Qt5::Widgets Qt5::Network Qt5::OpenGL
+set(LIBS ${LIBS} Qt5::Core Qt5::Widgets Qt5::Network Qt5::OpenGL Qt5::Multimedia
     ${AVCODEC} ${AVFORMAT} ${AVUTIL})
 
 if(WIN32)

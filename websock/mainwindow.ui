@@ -42,6 +42,8 @@
      <string>Options</string>
     </property>
     <addaction name="actionSet_Host_for_Web_Camera"/>
+    <addaction name="actionOpen_Local_WebCamera"/>
+    <addaction name="actionClose_Local_Web_Camera"/>
    </widget>
    <addaction name="menuTest"/>
    <addaction name="menuOptions"/>
@@ -91,6 +93,16 @@
   <action name="actionSet_Host_for_Web_Camera">
    <property name="text">
     <string>Set Host for Web Camera</string>
+   </property>
+  </action>
+  <action name="actionOpen_Local_WebCamera">
+   <property name="text">
+    <string>Open Local Web Camera</string>
+   </property>
+  </action>
+  <action name="actionClose_Local_Web_Camera">
+   <property name="text">
+    <string>Close Local Web Camera</string>
    </property>
   </action>
  </widget>

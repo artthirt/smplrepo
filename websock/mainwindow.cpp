@@ -124,3 +124,24 @@ void MainWindow::on_actionSet_Host_for_Web_Camera_triggered()
 		m_tcpsocket->newHost(QHostAddress(dlg.host()), dlg.port());
 	}
 }
+
+void MainWindow::on_actionOpen_Local_WebCamera_triggered()
+{
+	if(!m_camerastream.get()){
+		m_camerastream.reset(new CameraStream);
+		m_camerastream->setInitAV(false);
+
+		m_camerastream->moveToThread(m_camerastream.get());
+		m_camerastream->start();
+
+		connect(m_camerastream.get(), SIGNAL(sendImage(QImage)),
+				ui->widgetFrame, SLOT(onReceiveImage(QImage)), Qt::QueuedConnection);
+
+	}
+	m_camerastream->startPlay();
+}
+
+void MainWindow::on_actionClose_Local_Web_Camera_triggered()
+{
+	m_camerastream->stopPlay();
+}

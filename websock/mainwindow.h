@@ -9,6 +9,8 @@
 #include "tcpsocket.h"
 #include "testsender.h"
 
+#include "camerastream.h"
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -38,6 +40,10 @@ private slots:
 
 	void on_actionSet_Host_for_Web_Camera_triggered();
 
+	void on_actionOpen_Local_WebCamera_triggered();
+
+	void on_actionClose_Local_Web_Camera_triggered();
+
 private:
 	Ui::MainWindow *ui;
 	QProgressBar *m_progressBar;
@@ -46,5 +52,6 @@ private:
 	std::unique_ptr<WebSock> m_websock;
 	std::unique_ptr<tcpsocket> m_tcpsocket;
     std::unique_ptr<TestSender> m_testSender;
+	std::unique_ptr<CameraStream> m_camerastream;
 };
 #endif // MAINWINDOW_H

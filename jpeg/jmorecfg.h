@@ -187,7 +187,7 @@ typedef unsigned int JDIMENSION;
 /* a function referenced thru EXTERNs: */
 #define GLOBAL(type)		type
 /* a reference to a GLOBAL function: */
-#ifdef _MSC_VER_
+#ifdef _MSC_VER
 #define EXTERN(type)		__declspec(dllexport) type
 #else
 #define EXTERN(type)		extern type

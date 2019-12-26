@@ -1,27 +1,72 @@
-QT       += core gui network
+TARGET = websock
+TEMPLATE = app
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+DESTDIR = $$OUT_PWD/../bin
 
-CONFIG += c++11 console
+QT += core gui widgets network multimedia opengl
 
-SOURCES += \
-    main.cpp \
-    mainwindow.cpp \
-    videodata.cpp \
-    videoframe.cpp \
-    websock.cpp
+INCLUDEPATH += $$PWD
 
-HEADERS += \
-    mainwindow.h \
+AV = $$PWD/ffmpeg
+
+OPENCL = $$PWD/3rdparty/include/opencl/1.2/
+
+HEADERS += mainwindow.h \
+    camerastream.h \
+    cl_main_object.h \
+    common.h \
+    DataStream.h \
+    dialogsetfilename.h \
+    dialogtcphost.h \
+    jpegenc.h \
+    tcpserver.h \
+    tcpsocket.h \
+    testsender.h \
+    utils.h \
     videodata.h \
     videoframe.h \
+    videosurface.h \
     websock.h
 
+SOURCES += main.cpp \
+            mainwindow.cpp \
+    camerastream.cpp \
+    cl_main_object.cpp \
+    common.cpp \
+    DataStream.cpp \
+    dialogsetfilename.cpp \
+    dialogtcphost.cpp \
+    jpegenc.cpp \
+    main.cpp \
+    tcpserver.cpp \
+    tcpsocket.cpp \
+    testsender.cpp \
+    videodata.cpp \
+    videoframe.cpp \
+    videosurface.cpp \
+    websock.cpp
+
+INCLUDEPATH += $$AV/include \
+               $$OPENCL
+
+LIBS += -L$$AV/bin -lavcodec -lavformat -lavutil -lWS2_32  -L$$DESTDIR -ljpeg
+
+CONFIG(debug, debug|release){
+    DST = debug
+}else{
+    DST = release
+}
+
+UI_DIR = tmp/$$DST/ui
+RCC_DIR = tmp/$$DST/rcc
+OBJECTS_DIR = tmp/$$DST/obj
+MOC_DIR = tmp/$$DST/moc
+
+RESOURCES += \
+    resource.qrc
+
 FORMS += \
+    dialogsetfilename.ui \
+    dialogtcphost.ui \
     mainwindow.ui \
     videoframe.ui
-
-# Default rules for deployment.
-qnx: target.path = /tmp/$${TARGET}/bin
-else: unix:!android: target.path = /opt/$${TARGET}/bin
-!isEmpty(target.path): INSTALLS += target

@@ -39,8 +39,10 @@ void VideoFrame::setImage(const QImage &image)
 
 void VideoFrame::setScale(float v)
 {
-	if(v < 1)
+	if(v < 1){
 		v = 1;
+		m_mouseMove = QVector2D(0, 0);
+	}
 
 	m_scale = v;
 	m_is_update = true;
@@ -218,7 +220,7 @@ void VideoFrame::drawImage()
 	float mvp[16];
 
 	m_model.setToIdentity();
-	m_model.translate(0, 0, -2);
+	m_model.translate(m_mouseMove.x(), -m_mouseMove.y(), -2);
 
 	if(m_rotateBy90)
 		m_model.rotate(-90, 0, 0, 1);
@@ -424,4 +426,27 @@ void VideoFrame::paintEvent(QPaintEvent *event)
 	painter.end();
 
 //	QGLWidget::paintEvent(event);
+}
+
+
+void VideoFrame::mousePressEvent(QMouseEvent *event)
+{
+	m_mouseDown = true;
+	m_mousePos = QVector2D(event->pos().x(), event->pos().y());
+}
+
+void VideoFrame::mouseReleaseEvent(QMouseEvent *event)
+{
+	m_mouseDown = false;
+	m_mousePos = QVector2D(event->pos().x(), event->pos().y());
+}
+
+void VideoFrame::mouseMoveEvent(QMouseEvent *event)
+{
+	if(m_mouseDown){
+		QVector2D mousePos = QVector2D(event->pos().x(), event->pos().y());
+		m_mouseMove += (mousePos - m_mousePos)/height() * 2;
+		m_mousePos = mousePos;
+		m_is_update = true;
+	}
 }

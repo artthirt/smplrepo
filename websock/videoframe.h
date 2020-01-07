@@ -85,6 +85,10 @@ private:
     std::vector<float> m_vertexBuffer;
     std::vector<float> m_textureBuffer;
 
+	QVector2D m_mousePos;
+	QVector2D m_mouseMove;
+	bool m_mouseDown = false;
+
 //    CamCapture *m_camCapture;
 
     void setViewport(float w, float h);
@@ -97,6 +101,9 @@ protected:
     void initializeGL();
     void resizeGL(int w, int h);
     void paintGL();
+	void mousePressEvent(QMouseEvent *event);
+	void mouseReleaseEvent(QMouseEvent *event);
+	void mouseMoveEvent(QMouseEvent *event);
 
     // QObject interface
 public:

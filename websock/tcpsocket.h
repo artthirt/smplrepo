@@ -57,7 +57,7 @@ protected:
 	virtual void run();
 
 private:
-	QTcpSocket* m_socket;
+	QTcpSocket* m_socket = nullptr;
 	QObject *m_owner;
 	QByteArray m_buffer;
 	QByteArray m_packet;

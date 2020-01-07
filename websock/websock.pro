@@ -7,7 +7,11 @@ QT += core gui widgets network multimedia opengl
 
 INCLUDEPATH += $$PWD
 
-AV = $$PWD/ffmpeg
+win32{
+    AV = $$PWD/ffmpeg
+}else{
+    AV=/usr/include
+}
 
 OPENCL = $$PWD/3rdparty/include/opencl/1.2/
 
@@ -18,7 +22,7 @@ HEADERS += mainwindow.h \
     DataStream.h \
     dialogsetfilename.h \
     dialogtcphost.h \
-    jpegenc.h \
+#    jpegenc.h \
     tcpserver.h \
     tcpsocket.h \
     testsender.h \
@@ -36,8 +40,7 @@ SOURCES += main.cpp \
     DataStream.cpp \
     dialogsetfilename.cpp \
     dialogtcphost.cpp \
-    jpegenc.cpp \
-    main.cpp \
+#    jpegenc.cpp \
     tcpserver.cpp \
     tcpsocket.cpp \
     testsender.cpp \
@@ -49,7 +52,13 @@ SOURCES += main.cpp \
 INCLUDEPATH += $$AV/include \
                $$OPENCL
 
-LIBS += -L$$AV/bin -lavcodec -lavformat -lavutil -lWS2_32  -L$$DESTDIR -ljpeg
+LIBS += -L$$AV/bin -lavcodec -lavformat -lavutil -L$$DESTDIR # -ljpeg
+
+win32{
+    LIBS += -lWS2_32
+}else{
+    LIBS += -ldl -lgomp
+}
 
 CONFIG(debug, debug|release){
     DST = debug

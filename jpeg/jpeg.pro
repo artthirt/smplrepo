@@ -22,6 +22,7 @@ SOURCES = jcapimin.c\
 HEADERS += \
     jconfig.h \
     jpeglib.h \
+    jinclude.h \
     jversion.h \
     jmorecfg.h
 

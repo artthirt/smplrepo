@@ -4,10 +4,11 @@
 
 #include "jpegenc.h"
 
-#include "include/jpeglib.h"
 
 #include <stdio.h>
 #include <iostream>
+
+#include "include/jpeglib.h"
 
 //////////////////////////////////
 //////////////////////////////////

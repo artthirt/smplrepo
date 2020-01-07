@@ -88,11 +88,13 @@ void MainWindow::onTimeout()
 		m_progressBar->hide();
 	}
 
-	QString str = QString("Connecting: %1; host %2:%3")
-			.arg(m_tcpsocket->isConnecting())
-			.arg(m_tcpsocket->connectingHost().toString())
-			.arg(m_tcpsocket->connectingPort());
-	ui->statusbar->showMessage(str);
+	if(m_tcpsocket.get()){
+		QString str = QString("Connecting: %1; host %2:%3")
+				.arg(m_tcpsocket->isConnecting())
+				.arg(m_tcpsocket->connectingHost().toString())
+				.arg(m_tcpsocket->connectingPort());
+		ui->statusbar->showMessage(str);
+	}
 }
 
 void MainWindow::on_actionSet_Record_FileName_triggered()

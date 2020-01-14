@@ -30,6 +30,30 @@ VideoFrame::~VideoFrame()
 //        delete m_camCapture;
 }
 
+void VideoFrame::setRedBrightness(float v)
+{
+    m_Rgb[0] = v;
+    m_is_update = true;
+}
+
+void VideoFrame::setGreenBrightness(float v)
+{
+    m_Rgb[1] = v;
+    m_is_update = true;
+}
+
+void VideoFrame::setBlueBrightness(float v)
+{
+    m_Rgb[2] = v;
+    m_is_update = true;
+}
+
+void VideoFrame::setEV(float ev)
+{
+    m_eV = ev;
+    m_is_update = true;
+}
+
 void VideoFrame::setImage(const QImage &image)
 {
     //m_image = std::make_shared<QImage>(image);
@@ -280,6 +304,14 @@ void VideoFrame::drawImage()
 
 		glUniform1i(m_utexRgbInt, 0);
 
+        float rgb[3] = {
+            m_Rgb[0] * m_eV,
+            m_Rgb[1] * m_eV,
+            m_Rgb[2] * m_eV,
+        };
+
+        glUniform3fv(m_rgbInt, 1, rgb);
+
 		glEnableVertexAttribArray(m_vecRgbInt);
 		glEnableVertexAttribArray(m_texRgbInt);
 		glVertexAttribPointer(m_texRgbInt, 2, GL_FLOAT, false, 0, m_textureBuffer.data());
@@ -352,6 +384,7 @@ void VideoFrame::initializeGL()
 	m_texRgbInt = m_shpr_rgb.attributeLocation("aTex");
 	m_mvpRgbInt = m_shpr_rgb.uniformLocation("uMvp");
 	m_utexRgbInt = m_shpr_rgb.uniformLocation("uTex");
+    m_rgbInt = m_shpr_rgb.uniformLocation("rgb");
 
 	addPt(m_vertexBuffer, -1, -1, 0);
 	addPt(m_vertexBuffer, -1, 1, 0);

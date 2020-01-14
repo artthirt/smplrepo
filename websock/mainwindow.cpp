@@ -2,10 +2,28 @@
 #include "ui_mainwindow.h"
 
 #include <QProgressBar>
+#include <QSlider>
 
 #include "dialogsetfilename.h"
 
 #include "dialogtcphost.h"
+
+//////////////////////////////////
+
+double getValue(double val, double min, double max)
+{
+    return (val - min)/(max - min);
+}
+
+double getValue(QSlider *slider)
+{
+    return getValue(slider->value(), slider->minimum(), slider->maximum());
+}
+
+//////////////////////////////////
+/// \brief MainWindow::MainWindow
+/// \param parent
+///
 
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
@@ -146,4 +164,33 @@ void MainWindow::on_actionOpen_Local_WebCamera_triggered()
 void MainWindow::on_actionClose_Local_Web_Camera_triggered()
 {
 	m_camerastream->stopPlay();
+}
+
+void MainWindow::on_hs_red_valueChanged(int value)
+{
+    double val = 2 * getValue(ui->hs_red);
+    ui->lb_red->setText(QString::number(val, 'f', 1));
+    ui->widgetFrame->setRedBrightness(val);
+}
+
+void MainWindow::on_hs_green_valueChanged(int value)
+{
+    double val = 2 * getValue(ui->hs_green);
+    ui->lb_green->setText(QString::number(val, 'f', 1));
+    ui->widgetFrame->setGreenBrightness(val);
+}
+
+void MainWindow::on_hs_blue_valueChanged(int value)
+{
+    double val = 2 * getValue(ui->hs_blue);
+    ui->lb_blue->setText(QString::number(val, 'f', 1));
+    ui->widgetFrame->setBlueBrightness(val);
+}
+
+void MainWindow::on_hs_eV_valueChanged(int value)
+{
+    double val =  10 * (2 * getValue(ui->hs_eV) - 1);
+    val = pow(2, val);
+    ui->lb_eV->setText(QString::number(val, 'f', 1));
+    ui->widgetFrame->setEV(val);
 }

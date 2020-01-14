@@ -23,6 +23,11 @@ public:
     explicit VideoFrame(QWidget *parent = nullptr);
     ~VideoFrame();
 
+    void setRedBrightness(float v);
+    void setGreenBrightness(float v);
+    void setBlueBrightness(float v);
+    void setEV(float ev);
+
     void setImage(const QImage& image);
 
     void setScale(float v);
@@ -49,6 +54,9 @@ private:
 	float m_fps;
 	uint m_counter_fps;
 
+    float m_Rgb[3] = {1.f, 1.f, 1.f};
+    float m_eV = 1.f;
+
 	int m_prev_width	= 0;
 	int m_prev_height	= 0;
 	int m_prev_type		= 0;
@@ -69,6 +77,7 @@ private:
 	int m_vecRgbInt;
 	int m_texRgbInt;
 	int m_utexRgbInt;
+    int m_rgbInt;
 
 	bool m_isYUV = true;
 

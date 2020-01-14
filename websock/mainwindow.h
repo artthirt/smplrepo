@@ -44,6 +44,14 @@ private slots:
 
 	void on_actionClose_Local_Web_Camera_triggered();
 
+    void on_hs_red_valueChanged(int value);
+
+    void on_hs_green_valueChanged(int value);
+
+    void on_hs_blue_valueChanged(int value);
+
+    void on_hs_eV_valueChanged(int value);
+
 private:
 	Ui::MainWindow *ui;
 	QProgressBar *m_progressBar;

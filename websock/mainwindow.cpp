@@ -163,7 +163,8 @@ void MainWindow::on_actionOpen_Local_WebCamera_triggered()
 
 void MainWindow::on_actionClose_Local_Web_Camera_triggered()
 {
-	m_camerastream->stopPlay();
+    if(m_camerastream.get())
+        m_camerastream->stopPlay();
 }
 
 void MainWindow::on_hs_red_valueChanged(int value)
